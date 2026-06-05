@@ -1,0 +1,7 @@
+@media print {
+  .studio-layout__sidebar,
+  .preview-toolbar,
+  .collapse-btn {
+    display: none !important;
+  }
+}

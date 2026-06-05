@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Markdown 简历排版预览</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    :root {
+      --bg-app: #edf1f5;
+      --bg-panel: #f5f7fa;
+      --bg-panel-card: #ffffff;
+      --bg-preview: #e5e9ef;
+      --border-light: #e2e8f0;
+      --border-dark: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-placeholder: #94a3b8;
+      --accent: #0ea5e9;
+      --accent-hover: #0284c7;
+      --accent-soft: #e0f2fe;
+      --accent-muted: #bae6fd;
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-glow: 0 0 0 3px rgba(14, 165, 233, 0.18);
+      --shadow-panel: 4px 0 24px -4px rgba(15, 23, 42, 0.06);
+      --radius-lg: 8px;
+      --radius-md: 8px;
+      --radius-sm: 6px;
+      --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      --header-bar-height: 72px;
+      --panel-width: 460px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: hidden; }
+    body {
+      background: var(--bg-app);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      overflow: hidden;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+    .app { display: flex; height: 100dvh; min-height: 100dvh; }
+
+    .editor-panel {
+      flex: 0 0 var(--panel-width);
+      width: var(--panel-width);
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      box-shadow: 8px 0 30px -22px rgba(15, 23, 42, 0.35);
+      overflow: hidden;
+      transition: flex-basis 0.24s ease, width 0.24s ease, transform 0.24s ease, opacity 0.18s ease;
+      will-change: width, transform;
+    }
+
+    .panel-toggle-btn {
+      position: fixed;
+      top: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px) + 14px);
+      left: calc(var(--panel-width) - 16px);
+      z-index: 40;
+      height: 34px;
+      min-width: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--border-light);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--text-main);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(12px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: left 0.24s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+    .panel-toggle-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent-muted);
+      background: #fff;
+      transform: translateY(-1px);
+    }
+    .panel-toggle-icon {
+      font-size: 18px;
+      line-height: 1;
+      transform: translateY(-1px);
+    }
+    .app.panel-collapsed .editor-panel {
+      flex-basis: 0;
+      width: 0;
+      opacity: 0;
+      transform: translateX(-100%);
+      pointer-events: none;
+      border-right: none;
+      box-shadow: none;
+    }
+    .app.panel-collapsed .panel-toggle-btn {
+      left: 14px;
+    }
+
+    .panel-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+      height: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
+      min-height: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
+      padding: env(safe-area-inset-top, 0px) 20px 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96)),
+        radial-gradient(circle at 12% 24%, var(--accent-soft), transparent 32%);
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+    }
+    .panel-brand::after {
+      content: "";
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: -1px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-muted), transparent);
+      pointer-events: none;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #0f766e 0%, #0ea5e9 55%, #6366f1 100%);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+      flex-shrink: 0;
+    }
+    .brand-mark svg { width: 22px; height: 22px; }
+    .brand-name { font-size: 17px; font-weight: 800; letter-spacing: 0; line-height: 1.2; }
+    .brand-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand-desc::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.25);
+    }
+
+    .panel-body {
+      padding: 16px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .panel-card {
+      background: var(--bg-panel-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .panel-card--export {
+      margin-top: auto;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border-color: var(--accent-muted);
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-title-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .panel-title-icon svg { width: 15px; height: 15px; }
+    .panel-title-hint {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin: -6px 0 2px 38px;
+      line-height: 1.45;
+    }
+
+    .panel-title-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .theme-context {
+      border: 1px solid var(--accent-muted);
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent-soft), rgba(255, 255, 255, 0.88));
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .theme-context-top { display: flex; align-items: center; gap: 8px; }
+    .theme-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--accent);
+      border: 1px solid var(--accent-muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .theme-context-title {
+      font-size: 13px;
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .theme-context-desc { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+    .theme-config-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .theme-config-chips span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .theme-select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 0 36px 0 14px;
+      background-color: #f8fafc;
+      outline: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%230ea5e9%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 18px;
+    }
+    .theme-select:focus { border-color: var(--accent); background-color: #fff; box-shadow: var(--shadow-glow); }
+
+    .field-group { display: flex; flex-direction: column; gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .field label svg { width: 13px; height: 13px; color: var(--accent); opacity: 0.85; }
+    .field-note { font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: -2px; }
+    .field input,
+    .field select {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 0 12px;
+      background: #f8fafc;
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .field select {
+      appearance: none;
+      cursor: pointer;
+      background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+      background-position: calc(100% - 16px) 17px, calc(100% - 11px) 17px;
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+    .field input:focus,
+    .field select:focus { border-color: var(--accent); background-color: #fff; box-shadow: var(--shadow-glow); }
+    .field textarea {
+      width: 100%; min-height: 72px; border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm); padding: 10px 12px; background: #f8fafc;
+      outline: none; font-size: 13px; font-family: inherit; line-height: 1.55; resize: vertical;
+    }
+    .field textarea:focus { border-color: var(--accent); background: #fff; box-shadow: var(--shadow-glow); }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-section { display: flex; flex-direction: column; gap: 12px; }
+    .form-section-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .form-section-title { font-size: 12px; font-weight: 800; color: var(--text-main); letter-spacing: 0.02em; }
+    .entry-card {
+      border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+      padding: 12px; background: #fafbfc; display: flex; flex-direction: column; gap: 10px;
+    }
+    .entry-card-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .entry-card-label { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+    .btn-mini {
+      height: 28px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border-light);
+      background: #fff; color: var(--text-muted); font-size: 11px; font-weight: 600;
+      cursor: pointer; font-family: inherit; flex-shrink: 0;
+    }
+    .btn-mini:hover { border-color: var(--accent-muted); color: var(--accent); }
+    .btn-mini--danger:hover { border-color: #fecaca; color: #dc2626; }
+    .btn-mini--primary {
+      border-color: var(--accent-muted); color: var(--accent); background: var(--accent-soft);
+    }
+    #sourceEditor.active {
+      min-height: calc(100dvh - var(--header-bar-height) - 138px);
+    }
+    #sourceEditor .field {
+      flex: 1;
+      min-height: 0;
+    }
+    .md-editor {
+      min-height: clamp(620px, calc(100dvh - var(--header-bar-height) - 180px), 920px);
+      height: clamp(620px, calc(100dvh - var(--header-bar-height) - 180px), 920px);
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 12px; line-height: 1.6;
+      resize: vertical;
+    }
+    .md-hint {
+      font-size: 11px; color: var(--text-muted); line-height: 1.55;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      background: var(--accent-soft); border: 1px solid var(--accent-muted);
+    }
+    .md-hint code {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 10px; background: rgba(255,255,255,0.7);
+      padding: 1px 4px; border-radius: 3px;
+    }
+    .form-toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .editor-mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      background: #e2e8f0;
+    }
+    .editor-mode-tab {
+      height: 34px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .editor-mode-tab.active {
+      background: #fff;
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+    }
+    .editor-mode-panel { display: none; }
+    .editor-mode-panel.active {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .editor-block {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 2px;
+    }
+    .editor-block + .editor-block {
+      border-top: 1px solid var(--border-light);
+      padding-top: 16px;
+    }
+    .editor-block-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .editor-block-title {
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      color: #334155;
+    }
+    .editor-block-count {
+      min-width: 26px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent-muted);
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .editor-grid .field--wide { grid-column: 1 / -1; }
+    .section-list,
+    .custom-meta-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .resume-section-item,
+    .custom-meta-item {
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      background: #fbfcfe;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .section-item-head,
+    .custom-meta-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-drag-handle {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      background: #eef2f7;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .section-title-input,
+    .custom-meta-key {
+      flex: 1;
+      min-width: 0;
+      height: 36px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 0 10px;
+      background: #fff;
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .section-title-input:focus,
+    .custom-meta-key:focus { border-color: var(--accent); box-shadow: var(--shadow-glow); }
+    .section-body {
+      min-height: 116px;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      resize: vertical;
+    }
+    .custom-meta-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 0.8fr) minmax(0, 1.2fr);
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .custom-meta-value {
+      min-width: 0;
+      height: 36px;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 0 10px;
+      background: #fff;
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+    }
+    .custom-meta-value:focus { border-color: var(--accent); box-shadow: var(--shadow-glow); }
+    .empty-state {
+      padding: 16px;
+      border: 1px dashed var(--border-dark);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      background: #f8fafc;
+      font-size: 12px;
+      text-align: center;
+    }
+    .source-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+    .source-status {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .field-file {
+      border: 1.5px dashed var(--border-dark);
+      border-radius: var(--radius-md);
+      padding: 20px 16px 16px;
+      text-align: center;
+      background: linear-gradient(180deg, #fafbff 0%, #f1f5f9 100%);
+      cursor: pointer;
+    }
+    .field-file-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 10px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid var(--border-light);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+    }
+    .field-file-icon svg { width: 20px; height: 20px; }
+    .field-file-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .field-file-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; }
+    .field-file input[type="file"] {
+      width: 100%;
+      font-size: 12px;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+    }
+    .field-file input[type="file"]::file-selector-button {
+      padding: 8px 18px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent) 0%, #06b6d4 100%);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 8px;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 46px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+      font-family: inherit;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary svg { width: 18px; height: 18px; }
+    .export-actions { display: flex; flex-direction: column; gap: 10px; }
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--accent);
+      border: 1px solid var(--accent-muted);
+      box-shadow: none;
+    }
+    .btn-primary-sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: -4px;
+      line-height: 1.4;
+    }
+
+    .preview-panel {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-preview);
+      background-image: radial-gradient(var(--border-dark) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .preview-toolbar {
+      flex-shrink: 0;
+      height: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
+      min-height: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
+      padding: env(safe-area-inset-top, 0px) 24px 0;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .preview-toolbar-inner {
+      height: var(--header-bar-height);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+    }
+    .preview-status {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .preview-status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.14);
+    }
+    .preview-theme-label {
+      justify-self: end;
+      min-width: 112px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-light);
+      background: rgba(255,255,255,0.78);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .device-switcher {
+      display: inline-flex;
+      background: #e2e8f0;
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+    .device-tab {
+      height: 32px;
+      padding: 0 20px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .device-tab svg { width: 16px; height: 16px; }
+    .device-tab.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .device-stage {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+      overflow: auto;
+    }
+    .device-view {
+      display: none;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .device-view.is-active { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .iphone-frame {
+      width: min(380px, 100%);
+      aspect-ratio: 390 / 844;
+      height: auto;
+      max-height: 100%;
+      background: #0f172a;
+      border-radius: 54px;
+      padding: 12px;
+      box-shadow: var(--shadow-lg), 0 0 0 1px #334155;
+    }
+    .iphone-screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 42px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .iphone-dynamic-island {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 35px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 12;
+    }
+    .iphone-home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      border-radius: 10px;
+      background: #000;
+      z-index: 12;
+      opacity: 0.8;
+    }
+    .iphone-screen iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    .pc-frame {
+      width: min(1200px, 100%);
+      height: min(800px, 100%);
+      max-height: calc(100vh - 120px);
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+    }
+    .pc-topbar {
+      height: 48px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .window-btn { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    .window-btn.close { background: #ef4444; }
+    .window-btn.minimize { background: #f59e0b; }
+    .window-btn.maximize { background: #10b981; }
+    .pc-url {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 auto;
+      height: 28px;
+      border-radius: 6px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      border: 1px solid var(--border-light);
+    }
+    .pc-url svg { width: 12px; height: 12px; margin-right: 6px; opacity: 0.6; }
+    .pc-frame iframe { width: 100%; flex: 1; border: none; background: #ebe8e2; display: block; }
+
+    @media (max-width: 860px) {
+      body { overflow-x: hidden; overflow-y: auto; }
+      .app { flex-direction: column; height: auto; overflow-x: hidden; }
+      .editor-panel { width: 100%; flex: none; border-right: none; box-shadow: none; }
+      .panel-toggle-btn { top: 14px; left: auto; right: 14px; }
+      .app.panel-collapsed .editor-panel { display: none; }
+      .app.panel-collapsed .panel-toggle-btn { left: auto; right: 14px; }
+      #sourceEditor.active { min-height: auto; }
+      .md-editor { min-height: 520px; height: 64dvh; }
+      .panel-card--export { margin-top: 0; }
+      .preview-panel { min-height: 80dvh; }
+      .device-stage { padding: 24px 16px; }
+      .preview-toolbar { padding-left: 16px; padding-right: 16px; }
+      .preview-toolbar-inner { grid-template-columns: 1fr; justify-items: center; height: auto; min-height: var(--header-bar-height); padding: 10px 0; }
+      .preview-status,
+      .preview-theme-label { justify-self: center; }
+    }
+
+    @media (max-width: 520px) {
+      .panel-title { align-items: flex-start; }
+      .panel-title-actions { width: 100%; margin-left: 0; flex-wrap: wrap; }
+      .panel-card--editor .panel-title { flex-wrap: wrap; }
+      .editor-grid,
+      .custom-meta-row { grid-template-columns: 1fr; }
+      .section-item-head,
+      .custom-meta-head { align-items: stretch; }
+      .section-title-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside id="editorPanel" class="editor-panel">
+      <div class="panel-brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <div class="brand-name">Resume Preview</div>
+          <div class="brand-desc">Markdown 简历排版引擎</div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <section class="panel-card">
+          <h2 class="panel-title">
+            <span class="panel-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </span>
+            <span class="panel-title-text">简历模版</span>
+          </h2>
+          <select id="templateSelect" class="theme-select" aria-label="简历模版"></select>
+          <p id="templateSelectHint" class="panel-title-hint" style="margin:0;line-height:1.45">扫描本目录 应聘职位-姓名.md</p>
+        </section>
+
+        <section class="panel-card">
+          <h2 class="panel-title">
+            <span class="panel-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </span>
+            <span class="panel-title-text">简历风格</span>
+          </h2>
+          <select id="themeSelect" class="theme-select" aria-label="简历风格">
+            <option value="professional">商务正式 (Professional)</option>
+            <option value="minimal">极简留白 (Minimal)</option>
+            <option value="sidebar">双栏侧栏 (Sidebar)</option>
+            <option value="tech">技术极客 (Tech)</option>
+            <option value="elegant">优雅衬线 (Elegant)</option>
+            <option value="creative">创意渐变 (Creative)</option>
+            <option value="academic">学术履历 (Academic)</option>
+            <option value="compact">紧凑一页 (Compact)</option>
+            <option value="product">产品清爽 (Product)</option>
+            <option value="dark">暗色霓虹 (Dark)</option>
+            <option value="magazine">杂志排版 (Magazine)</option>
+            <option value="timeline">时间轴履历 (Timeline)</option>
+          </select>
+          <div class="theme-context" aria-live="polite">
+            <div class="theme-context-top">
+              <span id="styleBadge" class="theme-badge">商务简历</span>
+              <strong id="styleSummaryTitle" class="theme-context-title">正式配置</strong>
+            </div>
+            <p id="styleSummaryDesc" class="theme-context-desc">适合传统行业与校招，字段映射为姓名、职位和联系方式。</p>
+            <div id="styleConfigChips" class="theme-config-chips"></div>
+          </div>
+        </section>
+
+        <section class="panel-card panel-card--editor">
+          <h2 class="panel-title">
+            <span class="panel-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </span>
+            <span class="panel-title-text">简历内容</span>
+            <span class="panel-title-actions">
+              <button id="reloadMdBtn" class="btn-mini btn-mini--primary" type="button">重新加载</button>
+              <button id="downloadMdBtn" class="btn-mini" type="button">下载 .md</button>
+            </span>
+          </h2>
+          <div class="editor-mode-toggle" role="tablist" aria-label="编辑模式">
+            <button class="editor-mode-tab active" type="button" data-editor-mode="visual" role="tab" aria-selected="true">表单编辑</button>
+            <button class="editor-mode-tab" type="button" data-editor-mode="source" role="tab" aria-selected="false">Markdown 源码</button>
+          </div>
+
+          <div id="visualEditor" class="editor-mode-panel active" role="tabpanel">
+            <div class="editor-block">
+              <div class="editor-block-head">
+                <div class="editor-block-title">基础信息</div>
+              </div>
+              <div class="editor-grid">
+                <div class="field">
+                  <label for="metaName">姓名</label>
+                  <input id="metaName" data-meta-key="name" type="text" autocomplete="name" />
+                </div>
+                <div class="field">
+                  <label for="metaRole">职位 / 方向</label>
+                  <input id="metaRole" data-meta-key="role" type="text" />
+                </div>
+              </div>
+            </div>
+
+            <div class="editor-block">
+              <div class="editor-block-head">
+                <div class="editor-block-title">联系方式</div>
+              </div>
+              <div class="editor-grid">
+                <div class="field">
+                  <label for="metaEmail">邮箱</label>
+                  <input id="metaEmail" data-meta-key="email" type="email" autocomplete="email" />
+                </div>
+                <div class="field">
+                  <label for="metaPhone">电话</label>
+                  <input id="metaPhone" data-meta-key="phone" type="tel" autocomplete="tel" />
+                </div>
+                <div class="field">
+                  <label for="metaCity">城市</label>
+                  <input id="metaCity" data-meta-key="city" type="text" />
+                </div>
+                <div class="field">
+                  <label for="metaGithub">GitHub</label>
+                  <input id="metaGithub" data-meta-key="github" type="text" />
+                </div>
+                <div class="field">
+                  <label for="metaWebsite">网站</label>
+                  <input id="metaWebsite" data-meta-key="website" type="text" />
+                </div>
+                <div class="field">
+                  <label for="metaPortfolio">作品集</label>
+                  <input id="metaPortfolio" data-meta-key="portfolio" type="text" />
+                </div>
+                <div class="field field--wide">
+                  <label for="metaLinkedin">LinkedIn</label>
+                  <input id="metaLinkedin" data-meta-key="linkedin" type="text" />
+                </div>
+              </div>
+            </div>
+
+            <div class="editor-block">
+              <div class="editor-block-head">
+                <div class="editor-block-title">章节内容</div>
+                <span id="sectionCount" class="editor-block-count">0</span>
+              </div>
+              <div id="sectionList" class="section-list"></div>
+              <button id="addSectionBtn" class="btn-mini btn-mini--primary" type="button">添加章节</button>
+            </div>
+
+            <div class="editor-block">
+              <div class="editor-block-head">
+                <div class="editor-block-title">更多字段</div>
+                <button id="addMetaBtn" class="btn-mini" type="button">添加字段</button>
+              </div>
+              <div id="customMetaList" class="custom-meta-list"></div>
+            </div>
+          </div>
+
+          <div id="sourceEditor" class="editor-mode-panel" role="tabpanel" hidden>
+            <div class="source-actions">
+              <span id="sourceStatus" class="source-status">Markdown 已同步</span>
+              <button id="applySourceBtn" class="btn-mini btn-mini--primary" type="button">应用源码</button>
+            </div>
+            <div class="md-hint">
+              frontmatter 保存头部字段，正文以 <code>##</code> 拆成可编辑章节。
+            </div>
+            <div class="field">
+              <textarea id="markdownEditor" class="md-editor" spellcheck="false" aria-label="简历 Markdown 全文"></textarea>
+            </div>
+          </div>
+
+          <div class="field-file" style="margin-top:4px">
+            <div class="field-file-title">导入 Markdown</div>
+            <div class="field-file-desc">支持 .md 文件，覆盖当前编辑器内容</div>
+            <input type="file" id="mdFile" accept=".md" aria-label="导入 Markdown 文件" />
+          </div>
+        </section>
+
+        <section class="panel-card panel-card--export">
+          <h2 class="panel-title">
+            <span class="panel-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </span>
+            <span class="panel-title-text">导出与分享</span>
+          </h2>
+          <div class="export-actions">
+            <button id="exportPdfBtn" class="btn-primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              下载高清 PDF
+            </button>
+            <button id="exportWordBtn" class="btn-primary btn-secondary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              下载 Word
+            </button>
+          </div>
+          <p class="btn-primary-sub">基于 Desktop 预览导出，自动保留当前主题样式</p>
+        </section>
+      </div>
+    </aside>
+
+    <button id="panelToggleBtn" class="panel-toggle-btn" type="button" aria-controls="editorPanel" aria-expanded="true" title="收起左侧编辑区">
+      <span class="panel-toggle-icon" aria-hidden="true">‹</span>
+      <span class="panel-toggle-text">收起</span>
+    </button>
+
+    <main class="preview-panel">
+      <div class="preview-toolbar">
+        <div class="preview-toolbar-inner">
+          <div class="preview-status">实时预览</div>
+          <div class="device-switcher" id="deviceSwitcher" role="tablist">
+            <button class="device-tab active" data-device="pc" role="tab" aria-selected="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Desktop
+            </button>
+            <button class="device-tab" data-device="iphone" role="tab" aria-selected="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              Mobile
+            </button>
+          </div>
+          <div id="previewThemeLabel" class="preview-theme-label">Professional</div>
+        </div>
+      </div>
+      <div class="device-stage" id="deviceStage"></div>
+    </main>
+  </div>
+
+  <script>
+    const DEVICES = [
+      {
+        id: "pc",
+        mode: "desktop",
+        frameHtml: `
+          <div class="pc-frame">
+            <div class="pc-topbar">
+              <span class="window-btn close"></span>
+              <span class="window-btn minimize"></span>
+              <span class="window-btn maximize"></span>
+              <div class="pc-url">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                resume-preview.local
+              </div>
+              <div style="width:48px"></div>
+            </div>
+            <iframe id="previewIframePc" data-preview></iframe>
+          </div>
+        `,
+      },
+      {
+        id: "iphone",
+        mode: "mobile",
+        frameHtml: `
+          <div class="iphone-frame">
+            <div class="iphone-screen">
+              <div class="iphone-dynamic-island"></div>
+              <iframe id="previewIframeMobile" data-preview></iframe>
+              <div class="iphone-home-indicator"></div>
+            </div>
+          </div>
+        `,
+      },
+    ];
+
+    const DEFAULT_TEMPLATE = "高级前端工程师-张明远.md";
+    const TEMPLATE_STORAGE_KEY = "resume-preview-template";
+
+    let templateFiles = [];
+    let currentTemplateFile = DEFAULT_TEMPLATE;
+    let markdownContent = "";
+    let resumeMeta = {};
+    let resumeBody = "";
+    let resumeSections = [];
+    let customMetaEntries = [];
+    let previewTimer = null;
+    let activeEditorMode = "visual";
+    let isRenderingEditor = false;
+    const markdownEditor = document.getElementById("markdownEditor");
+    const reloadMdBtn = document.getElementById("reloadMdBtn");
+    const downloadMdBtn = document.getElementById("downloadMdBtn");
+    const visualEditor = document.getElementById("visualEditor");
+    const sourceEditor = document.getElementById("sourceEditor");
+    const sourceStatus = document.getElementById("sourceStatus");
+    const applySourceBtn = document.getElementById("applySourceBtn");
+    const addSectionBtn = document.getElementById("addSectionBtn");
+    const sectionList = document.getElementById("sectionList");
+    const sectionCount = document.getElementById("sectionCount");
+    const addMetaBtn = document.getElementById("addMetaBtn");
+    const customMetaList = document.getElementById("customMetaList");
+    const appRoot = document.querySelector(".app");
+    const panelToggleBtn = document.getElementById("panelToggleBtn");
+    const panelToggleText = panelToggleBtn?.querySelector(".panel-toggle-text");
+    const panelToggleIcon = panelToggleBtn?.querySelector(".panel-toggle-icon");
+    const KNOWN_META_KEYS = ["name", "role", "email", "phone", "city", "github", "website", "portfolio", "linkedin", "theme"];
+
+    const STYLE_PANEL_CONFIGS = {
+      professional: {
+        badge: "商务简历",
+        title: "正式配置",
+        accent: "#1e40af",
+        desc: "适合传统行业与校招，字段映射为姓名、职位和联系方式。",
+        panelTitle: "简历头部",
+        panelHint: "用于生成页眉区的姓名、职位和联系信息。",
+        nameLabel: "姓名",
+        roleLabel: "求职意向 / 职位",
+        contactLabel: "联系方式",
+        namePlaceholder: "输入姓名",
+        rolePlaceholder: "如：高级前端工程师",
+        contactPlaceholder: "邮箱 · 电话 · 城市",
+        nameHelp: "显示为简历主标题。",
+        roleHelp: "显示在姓名下方。",
+        contactHelp: "邮箱、电话、城市等，用 · 分隔。",
+        chips: ["姓名", "职位", "联系"],
+      },
+      minimal: {
+        badge: "极简",
+        title: "留白配置",
+        accent: "#334155",
+        desc: "大留白、细线条，适合设计类与互联网岗位。",
+        panelTitle: "头部信息",
+        panelHint: "极简风格仅展示核心身份信息。",
+        nameLabel: "姓名",
+        roleLabel: "职位 / 方向",
+        contactLabel: "联系摘要",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "职位",
+        contactPlaceholder: "邮箱 · 城市",
+        nameHelp: "大号姓名为视觉焦点。",
+        roleHelp: "细体副标题。",
+        contactHelp: "一行联系信息。",
+        chips: ["姓名", "方向", "联系"],
+      },
+      sidebar: {
+        badge: "双栏",
+        title: "侧栏配置",
+        accent: "#0f766e",
+        desc: "左侧色块展示个人信息，右侧为经历正文。",
+        panelTitle: "侧栏头部",
+        panelHint: "姓名和职位显示在左侧色块，联系方式在侧栏底部。",
+        nameLabel: "姓名",
+        roleLabel: "目标岗位",
+        contactLabel: "侧栏联系信息",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "目标岗位",
+        contactPlaceholder: "邮箱 · 电话 · 城市",
+        nameHelp: "侧栏顶部大字。",
+        roleHelp: "侧栏职位标签。",
+        contactHelp: "显示在侧栏底部。",
+        chips: ["姓名", "岗位", "侧栏"],
+      },
+      tech: {
+        badge: "技术",
+        title: "极客配置",
+        accent: "#7c3aed",
+        desc: "等宽字体点缀、代码风装饰，适合研发与数据岗位。",
+        panelTitle: "开发者信息",
+        panelHint: "姓名作为终端标题，职位为命令提示符风格。",
+        nameLabel: "开发者姓名",
+        roleLabel: "Role / Title",
+        contactLabel: "Links & Contact",
+        namePlaceholder: "Your Name",
+        rolePlaceholder: "Senior Engineer",
+        contactPlaceholder: "email · github · location",
+        nameHelp: "显示为终端窗口标题。",
+        roleHelp: "显示为 $ role 提示。",
+        contactHelp: "邮箱、GitHub 等。",
+        chips: ["Name", "Role", "Links"],
+      },
+      elegant: {
+        badge: "优雅",
+        title: "衬线配置",
+        accent: "#92400e",
+        desc: "Playfair 衬线标题，适合咨询、金融、品牌类岗位。",
+        panelTitle: "名片头部",
+        panelHint: "衬线大标题配合细线分隔。",
+        nameLabel: "姓名",
+        roleLabel: "职称 / 专长",
+        contactLabel: "联络方式",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "职称",
+        contactPlaceholder: "邮箱 · 电话",
+        nameHelp: "衬线体大标题。",
+        roleHelp: "职位副标题。",
+        contactHelp: "底部联系行。",
+        chips: ["姓名", "职称", "联络"],
+      },
+      creative: {
+        badge: "创意",
+        title: "渐变配置",
+        accent: "#db2777",
+        desc: "渐变页眉与色块标签，适合设计、新媒体岗位。",
+        panelTitle: "创意头部",
+        panelHint: "渐变色页眉展示姓名与职位。",
+        nameLabel: "姓名",
+        roleLabel: "创意头衔",
+        contactLabel: "社交 / 联系",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "Designer / Creator",
+        contactPlaceholder: "邮箱 · 作品集链接",
+        nameHelp: "渐变区大标题。",
+        roleHelp: "彩色标签展示。",
+        contactHelp: "社交与联系方式。",
+        chips: ["姓名", "头衔", "社交"],
+      },
+      academic: {
+        badge: "学术",
+        title: "履历配置",
+        accent: "#1f2937",
+        desc: "规范学术格式，适合科研、教职、留学申请。",
+        panelTitle: "学术头部",
+        panelHint: "姓名居中，下方附学位与机构信息。",
+        nameLabel: "姓名",
+        roleLabel: "学位 / 研究方向",
+        contactLabel: "机构 / 邮箱",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "Ph.D. Candidate in CS",
+        contactPlaceholder: "大学 · 实验室 · 邮箱",
+        nameHelp: "学术履历主标题。",
+        roleHelp: "学位与方向。",
+        contactHelp: "机构与学术邮箱。",
+        chips: ["姓名", "学位", "机构"],
+      },
+      compact: {
+        badge: "紧凑",
+        title: "一页配置",
+        accent: "#059669",
+        desc: "小字号高密度排版，力求内容塞进一页 A4。",
+        panelTitle: "紧凑头部",
+        panelHint: "单行头部，最大化正文空间。",
+        nameLabel: "姓名",
+        roleLabel: "职位",
+        contactLabel: "一行联系",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "职位",
+        contactPlaceholder: "邮箱 电话 城市",
+        nameHelp: "与职位同一行区域。",
+        roleHelp: "紧跟姓名。",
+        contactHelp: "紧凑单行。",
+        chips: ["姓名", "职位", "一行"],
+      },
+      product: {
+        badge: "产品",
+        title: "清爽配置",
+        accent: "#2563eb",
+        desc: "蓝白产品文档感，适合互联网、产品经理、运营与综合岗位。",
+        panelTitle: "产品头部",
+        panelHint: "像产品说明页一样展示身份、方向与关键链接。",
+        nameLabel: "姓名",
+        roleLabel: "岗位 / 职能",
+        contactLabel: "联系 / 链接",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "产品经理 / 前端工程师",
+        contactPlaceholder: "邮箱 · 城市 · 作品集",
+        nameHelp: "显示为产品页主标题。",
+        roleHelp: "显示为角色标签。",
+        contactHelp: "联系方式与作品集链接。",
+        chips: ["产品感", "蓝白", "清爽"],
+      },
+      dark: {
+        badge: "暗色",
+        title: "霓虹配置",
+        accent: "#22c55e",
+        desc: "暗色背景、荧光强调，适合技术、AI、开发者作品集。",
+        panelTitle: "暗色头部",
+        panelHint: "用高对比暗色面板突出姓名与技术标签。",
+        nameLabel: "姓名",
+        roleLabel: "技术方向",
+        contactLabel: "链接 / 联系",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "AI Engineer / Full-stack Developer",
+        contactPlaceholder: "email · github · website",
+        nameHelp: "霓虹大标题。",
+        roleHelp: "荧光副标题。",
+        contactHelp: "邮箱、GitHub、个人站。",
+        chips: ["暗色", "霓虹", "技术"],
+      },
+      magazine: {
+        badge: "杂志",
+        title: "封面配置",
+        accent: "#e11d48",
+        desc: "大标题与杂志式留白，适合品牌、内容、设计和个人 IP。",
+        panelTitle: "杂志头部",
+        panelHint: "用封面式姓名与副标题制造视觉记忆点。",
+        nameLabel: "姓名 / 品牌名",
+        roleLabel: "人物标签",
+        contactLabel: "联系摘要",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "Creator / Designer / Writer",
+        contactPlaceholder: "邮箱 · 作品集 · 城市",
+        nameHelp: "大号封面标题。",
+        roleHelp: "杂志副标题。",
+        contactHelp: "短联系摘要。",
+        chips: ["封面", "个人IP", "设计"],
+      },
+      timeline: {
+        badge: "时间轴",
+        title: "履历配置",
+        accent: "#f97316",
+        desc: "左侧时间轴视觉，适合突出项目经历、工作节点和成长路径。",
+        panelTitle: "时间轴头部",
+        panelHint: "章节会以时间线样式组织，适合经历导向简历。",
+        nameLabel: "姓名",
+        roleLabel: "当前职位",
+        contactLabel: "联系方式",
+        namePlaceholder: "姓名",
+        rolePlaceholder: "Senior Frontend Engineer",
+        contactPlaceholder: "邮箱 · 电话 · 城市",
+        nameHelp: "顶部身份信息。",
+        roleHelp: "当前职位或方向。",
+        contactHelp: "基础联系信息。",
+        chips: ["经历", "节点", "项目"],
+      },
+    };
+
+    function hexToRgb(hex) {
+      const normalized = hex.replace("#", "").trim();
+      const full = normalized.length === 3 ? normalized.split("").map((c) => c + c).join("") : normalized;
+      const value = Number.parseInt(full, 16);
+      return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+
+    function shadeHex(hex, amount) {
+      const { r, g, b } = hexToRgb(hex);
+      const clamp = (v) => Math.max(0, Math.min(255, v));
+      const ch = (v) => clamp(v + amount).toString(16).padStart(2, "0");
+      return `#${ch(r)}${ch(g)}${ch(b)}`;
+    }
+
+    function applyPanelAccent(accent) {
+      const { r, g, b } = hexToRgb(accent);
+      document.documentElement.style.setProperty("--accent", accent);
+      document.documentElement.style.setProperty("--accent-hover", shadeHex(accent, -24));
+      document.documentElement.style.setProperty("--accent-soft", `rgba(${r}, ${g}, ${b}, 0.10)`);
+      document.documentElement.style.setProperty("--accent-muted", `rgba(${r}, ${g}, ${b}, 0.28)`);
+      document.documentElement.style.setProperty("--shadow-glow", `0 0 0 3px rgba(${r}, ${g}, ${b}, 0.18)`);
+    }
+
+    function applyThemeConfig() {
+      const config = STYLE_PANEL_CONFIGS[themeSelect.value] || STYLE_PANEL_CONFIGS.professional;
+      applyPanelAccent(config.accent);
+      styleBadge.textContent = config.badge;
+      styleSummaryTitle.textContent = config.title;
+      styleSummaryDesc.textContent = config.desc;
+      if (previewThemeLabel) previewThemeLabel.textContent = config.badge;
+      styleConfigChips.replaceChildren(...config.chips.map((chip) => {
+        const item = document.createElement("span");
+        item.textContent = chip;
+        return item;
+      }));
+    }
+
+    function parseFrontmatter(text) {
+      const match = String(text).match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+      if (!match) {
+        return { meta: {}, body: String(text).trim() };
+      }
+      const meta = {};
+      match[1].split("\n").forEach((line) => {
+        const idx = line.indexOf(":");
+        if (idx === -1) return;
+        const key = line.slice(0, idx).trim();
+        const value = line.slice(idx + 1).trim();
+        if (key) meta[key] = value;
+      });
+      return { meta, body: match[2].trim() };
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function parseMarkdownSections(body) {
+      const text = String(body || "").trim();
+      if (!text) return [{ title: "个人简介", body: "" }];
+
+      const sections = [];
+      const headingRegex = /^##[ \t]+(.+?)\s*$/gm;
+      let match;
+      let currentTitle = "";
+      let currentStart = 0;
+
+      while ((match = headingRegex.exec(text))) {
+        if (!currentTitle && match.index > 0) {
+          const intro = text.slice(0, match.index).trim();
+          if (intro) sections.push({ title: "开场内容", body: intro });
+        }
+        if (currentTitle) {
+          sections.push({
+            title: currentTitle,
+            body: text.slice(currentStart, match.index).trim(),
+          });
+        }
+        currentTitle = match[1].trim();
+        currentStart = headingRegex.lastIndex;
+      }
+
+      if (currentTitle) {
+        sections.push({ title: currentTitle, body: text.slice(currentStart).trim() });
+      }
+
+      if (!sections.length) {
+        sections.push({ title: "正文", body: text });
+      }
+
+      return sections;
+    }
+
+    function buildBodyFromSections() {
+      return resumeSections
+        .map((section) => {
+          const title = (section.title || "未命名章节").trim();
+          const body = (section.body || "").trim();
+          return `## ${title}${body ? `\n\n${body}` : ""}`;
+        })
+        .join("\n\n");
+    }
+
+    function readMetaFromForm() {
+      const nextMeta = {};
+      document.querySelectorAll("[data-meta-key]").forEach((input) => {
+        nextMeta[input.dataset.metaKey] = input.value.trim();
+      });
+      customMetaEntries.forEach((entry) => {
+        const key = (entry.key || "").trim();
+        if (!key || KNOWN_META_KEYS.includes(key)) return;
+        nextMeta[key] = (entry.value || "").trim();
+      });
+      nextMeta.theme = themeSelect.value;
+      return nextMeta;
+    }
+
+    function readSectionsFromForm() {
+      resumeSections = Array.from(sectionList.querySelectorAll(".resume-section-item")).map((item) => {
+        const title = item.querySelector(".section-title-input")?.value || "";
+        const body = item.querySelector(".section-body")?.value || "";
+        return { title: title.trim(), body: body.trim() };
+      });
+    }
+
+    function readCustomMetaFromForm() {
+      customMetaEntries = Array.from(customMetaList.querySelectorAll(".custom-meta-item")).map((item) => ({
+        key: item.querySelector(".custom-meta-key")?.value.trim() || "",
+        value: item.querySelector(".custom-meta-value")?.value.trim() || "",
+      }));
+    }
+
+    function serializeMarkdown() {
+      const meta = readMetaFromForm();
+      const orderedKeys = [
+        ...KNOWN_META_KEYS,
+        ...Object.keys(meta).filter((key) => !KNOWN_META_KEYS.includes(key)),
+      ];
+      const metaLines = [];
+      const used = new Set();
+
+      orderedKeys.forEach((key) => {
+        if (!key || used.has(key)) return;
+        used.add(key);
+        const value = meta[key] ?? "";
+        if (!KNOWN_META_KEYS.includes(key) && String(value).trim() === "") return;
+        metaLines.push(`${key}: ${String(value).trim()}`);
+      });
+
+      resumeBody = buildBodyFromSections();
+      return `---\n${metaLines.join("\n")}\n---\n\n${resumeBody}\n`;
+    }
+
+    function syncMarkdownFromEditor() {
+      if (isRenderingEditor) return;
+      readSectionsFromForm();
+      readCustomMetaFromForm();
+      resumeMeta = readMetaFromForm();
+      markdownContent = serializeMarkdown();
+      markdownEditor.value = markdownContent;
+      sourceStatus.textContent = "Markdown 已同步";
+      schedulePreview();
+    }
+
+    function commitActiveEditor() {
+      if (activeEditorMode === "source") {
+        applyResumeMarkdown(markdownEditor.value);
+        sourceStatus.textContent = "Markdown 已应用";
+      } else {
+        syncMarkdownFromEditor();
+      }
+    }
+
+    function renderMetaFields() {
+      document.querySelectorAll("[data-meta-key]").forEach((input) => {
+        input.value = resumeMeta[input.dataset.metaKey] || "";
+      });
+    }
+
+    function renderSectionsEditor() {
+      sectionList.innerHTML = "";
+      if (!resumeSections.length) {
+        sectionList.innerHTML = '<div class="empty-state">暂无章节</div>';
+      } else {
+        resumeSections.forEach((section, index) => {
+          const item = document.createElement("div");
+          item.className = "resume-section-item";
+          item.dataset.index = String(index);
+          item.innerHTML = `
+            <div class="section-item-head">
+              <span class="section-drag-handle">${String(index + 1).padStart(2, "0")}</span>
+              <input class="section-title-input" type="text" value="${escapeHtml(section.title)}" aria-label="章节标题" />
+              <button class="btn-mini btn-mini--danger" type="button" data-section-action="remove">删除</button>
+            </div>
+            <div class="field">
+              <textarea class="section-body" spellcheck="false" aria-label="章节内容">${escapeHtml(section.body)}</textarea>
+            </div>
+          `;
+          sectionList.appendChild(item);
+        });
+      }
+      sectionCount.textContent = String(resumeSections.length);
+    }
+
+    function renderCustomMetaEditor() {
+      customMetaList.innerHTML = "";
+      if (!customMetaEntries.length) {
+        customMetaList.innerHTML = '<div class="empty-state">暂无自定义字段</div>';
+        return;
+      }
+      customMetaEntries.forEach((entry, index) => {
+        const item = document.createElement("div");
+        item.className = "custom-meta-item";
+        item.dataset.index = String(index);
+        item.innerHTML = `
+          <div class="custom-meta-head">
+            <div class="custom-meta-row">
+              <input class="custom-meta-key" type="text" value="${escapeHtml(entry.key)}" aria-label="字段名" />
+              <input class="custom-meta-value" type="text" value="${escapeHtml(entry.value)}" aria-label="字段值" />
+            </div>
+            <button class="btn-mini btn-mini--danger" type="button" data-meta-action="remove">删除</button>
+          </div>
+        `;
+        customMetaList.appendChild(item);
+      });
+    }
+
+    function renderEditor() {
+      isRenderingEditor = true;
+      renderMetaFields();
+      renderSectionsEditor();
+      renderCustomMetaEditor();
+      markdownEditor.value = markdownContent;
+      isRenderingEditor = false;
+    }
+
+    function buildContactLine(meta) {
+      return [
+        meta.email,
+        meta.phone,
+        meta.city,
+        meta.github,
+        meta.website,
+        meta.portfolio,
+        meta.linkedin,
+      ].filter((v) => v && v !== "").join(" · ");
+    }
+
+    function applyResumeMarkdown(text, options = {}) {
+      const { render = true } = options;
+      markdownContent = text;
+      const parsed = parseFrontmatter(text);
+      resumeMeta = parsed.meta;
+      resumeBody = parsed.body;
+      resumeSections = parseMarkdownSections(resumeBody || markdownContent);
+      customMetaEntries = Object.entries(resumeMeta)
+        .filter(([key]) => !KNOWN_META_KEYS.includes(key))
+        .map(([key, value]) => ({ key, value }));
+      if (resumeMeta.theme && themeSelect.querySelector(`option[value="${resumeMeta.theme}"]`)) {
+        themeSelect.value = resumeMeta.theme;
+        applyThemeConfig();
+      }
+      if (render) renderEditor();
+    }
+
+    function schedulePreview() {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(updatePreview, 120);
+    }
+
+    function sortTemplateFiles(files) {
+      return [...new Set(files)].sort((a, b) => {
+        if (a === DEFAULT_TEMPLATE) return -1;
+        if (b === DEFAULT_TEMPLATE) return 1;
+        return a.localeCompare(b, "zh-CN");
+      });
+    }
+
+    function templateLabel(filename) {
+      const base = filename.replace(/\.md$/i, "");
+      const idx = base.lastIndexOf("-");
+      if (idx <= 0) return base;
+      const role = base.slice(0, idx);
+      const person = base.slice(idx + 1);
+      if (filename === DEFAULT_TEMPLATE) return `默认 · ${role} · ${person}`;
+      return `${role} · ${person}`;
+    }
+
+    function parseDirectoryListing(html) {
+      const files = [];
+      const re = /href="([^"?#]+\.md)"/gi;
+      let match;
+      while ((match = re.exec(html)) !== null) {
+        const raw = decodeURIComponent(match[1].replace(/\/$/, ""));
+        const name = raw.split("/").pop();
+        if (/\.md$/i.test(name) && name.includes("-") && !/^readme/i.test(name)) {
+          files.push(name);
+        }
+      }
+      return sortTemplateFiles(files);
+    }
+
+    async function discoverResumeTemplates() {
+      try {
+        const res = await fetch("./", { cache: "no-store" });
+        if (!res.ok) throw new Error(`目录列表不可用 (${res.status})`);
+        const files = parseDirectoryListing(await res.text());
+        if (files.length) return files;
+      } catch (error) {
+        console.warn("扫描模版目录失败，使用内置列表。", error);
+      }
+      return sortTemplateFiles([
+        "高级前端工程师-张明远.md",
+        "前端开发-马小军.md",
+        "全栈开发实习-孙小梅.md",
+        "前端架构负责人-林峻峰.md",
+        "研发总监-陈维舟.md",
+        "基础平台首席架构师-沈牧云.md",
+        "资深全栈技术顾问-邹海涛.md",
+        "数字化交付总监-韩立新.md",
+        "资深产品技术专家-顾明川.md",
+        "游戏主播-唐笑笑.md",
+        "带货主播-李梦琪.md",
+        "人事专员-王雅婷.md",
+        "HR招聘专员-赵思琪.md",
+        "前台接待-刘欣然.md",
+        "行政前台-周婷婷.md",
+        "财务会计-陈佳佳.md",
+        "出纳-吴敏.md",
+      ]);
+    }
+
+    function renderTemplateSelect() {
+      const templateSelect = document.getElementById("templateSelect");
+      const templateSelectHint = document.getElementById("templateSelectHint");
+      if (!templateSelect) return;
+
+      templateSelect.replaceChildren(...templateFiles.map((file) => {
+        const option = document.createElement("option");
+        option.value = file;
+        option.textContent = templateLabel(file);
+        return option;
+      }));
+
+      if (templateFiles.includes(currentTemplateFile)) {
+        templateSelect.value = currentTemplateFile;
+      } else if (templateFiles.length) {
+        currentTemplateFile = templateFiles[0];
+        templateSelect.value = currentTemplateFile;
+      }
+
+      if (templateSelectHint) {
+        templateSelectHint.textContent = `已发现 ${templateFiles.length} 个模版 · 当前 ${currentTemplateFile}`;
+      }
+    }
+
+    async function loadTemplate(file, options = {}) {
+      const { persist = true } = options;
+      const target = file || currentTemplateFile || DEFAULT_TEMPLATE;
+      const res = await fetch(`./${target}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`无法加载 ${target}`);
+      currentTemplateFile = target;
+      applyResumeMarkdown(await res.text());
+      if (persist) {
+        try { localStorage.setItem(TEMPLATE_STORAGE_KEY, target); } catch (_) {}
+      }
+      const templateSelect = document.getElementById("templateSelect");
+      if (templateSelect && templateSelect.value !== target) {
+        templateSelect.value = target;
+      }
+      const templateSelectHint = document.getElementById("templateSelectHint");
+      if (templateSelectHint) {
+        templateSelectHint.textContent = `已发现 ${templateFiles.length} 个模版 · 当前 ${currentTemplateFile}`;
+      }
+    }
+
+    async function loadExternalData() {
+      await loadTemplate(currentTemplateFile, { persist: false });
+    }
+
+    const mdFile = document.getElementById("mdFile");
+    const templateSelect = document.getElementById("templateSelect");
+    const deviceSwitcher = document.getElementById("deviceSwitcher");
+    const deviceStage = document.getElementById("deviceStage");
+    const exportPdfBtn = document.getElementById("exportPdfBtn");
+    const exportWordBtn = document.getElementById("exportWordBtn");
+    const themeSelect = document.getElementById("themeSelect");
+    const styleBadge = document.getElementById("styleBadge");
+    const styleSummaryTitle = document.getElementById("styleSummaryTitle");
+    const styleSummaryDesc = document.getElementById("styleSummaryDesc");
+    const styleConfigChips = document.getElementById("styleConfigChips");
+    const previewThemeLabel = document.getElementById("previewThemeLabel");
+
+    let activeDeviceId = DEVICES[0].id;
+
+    const CONTENT_BASE = `
+      .content { max-width: 100%; }
+      .content > *:first-child { margin-top: 0; }
+      .content h2 {
+        font-size: 15px; font-weight: 700; margin: 28px 0 12px;
+        padding-bottom: 6px; letter-spacing: 0.04em;
+      }
+      .content h3 { font-size: 14px; font-weight: 700; margin: 18px 0 6px; }
+      .content p { margin: 0 0 10px; line-height: 1.65; }
+      .content ul, .content ol { margin: 6px 0 12px; padding-left: 1.3em; }
+      .content li { margin: 4px 0; line-height: 1.6; }
+      .content strong { font-weight: 700; }
+      .content em { font-style: italic; opacity: 0.85; }
+      .content hr { border: none; margin: 20px 0; }
+      .content pre {
+        max-width: 100%; overflow-x: auto; font-size: 12px;
+        padding: 12px 14px; border-radius: 6px; line-height: 1.5;
+      }
+      .content code { font-size: 0.9em; padding: 1px 5px; border-radius: 3px; }
+      .content table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+      .content th, .content td { padding: 8px 10px; border: 1px solid currentColor; opacity: 0.9; }
+    `;
+
+    function buildTheme(theme, name, role, contact, htmlContent, isMobile) {
+      const themes = {
+        professional: {
+          css: `
+            body { background: #e8ecf1; font-family: "Noto Serif SC", "PingFang SC", serif; color: #1a1a2e; }
+            .page {
+              width: 100%; max-width: 800px; min-height: 100vh; margin: 36px auto;
+              background: #fff; padding: 56px 64px 72px;
+              box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            }
+            .resume-header {
+              text-align: center; padding-bottom: 28px; margin-bottom: 8px;
+              border-bottom: 2px solid #1e40af;
+            }
+            .resume-name { font-size: 36px; font-weight: 900; color: #1e40af; letter-spacing: 0.12em; margin-bottom: 8px; }
+            .resume-role { font-size: 16px; color: #475569; font-weight: 500; margin-bottom: 12px; }
+            .resume-contact { font-size: 13px; color: #64748b; letter-spacing: 0.02em; }
+            .content h2 { color: #1e40af; border-bottom: 1px solid #cbd5e1; text-transform: uppercase; }
+            .content h3 { color: #1e293b; }
+            .content strong { color: #1e40af; }
+            .content em { color: #64748b; }
+            .content pre { background: #f1f5f9; color: #334155; }
+            .content code { background: #e2e8f0; color: #1e40af; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; padding: 40px 28px 56px; box-shadow: none; }
+            body.mode-mobile .resume-name { font-size: 28px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+        minimal: {
+          css: `
+            body { background: #f5f5f4; font-family: "Inter", "PingFang SC", sans-serif; color: #292524; }
+            .page {
+              width: 100%; max-width: 720px; min-height: 100vh; margin: 48px auto;
+              background: #fff; padding: 80px 72px 96px;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            }
+            .resume-header { margin-bottom: 48px; }
+            .resume-name { font-size: 42px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
+            .resume-role { font-size: 15px; color: #78716c; font-weight: 400; margin-bottom: 16px; }
+            .resume-contact { font-size: 13px; color: #a8a29e; }
+            .content h2 { color: #292524; border-bottom: none; font-weight: 600; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 40px; }
+            .content h3 { font-weight: 600; font-size: 14px; }
+            .content em { color: #a8a29e; font-size: 13px; }
+            .content pre { background: #fafaf9; color: #57534e; border: 1px solid #e7e5e4; }
+            .content code { background: #f5f5f4; color: #57534e; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; padding: 48px 28px 64px; box-shadow: none; }
+            body.mode-mobile .resume-name { font-size: 32px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+        sidebar: {
+          css: `
+            body { background: #d1d5db; font-family: "Inter", "PingFang SC", sans-serif; color: #1f2937; }
+            .page {
+              width: 100%; max-width: 900px; min-height: 100vh; margin: 32px auto;
+              background: #fff; display: flex; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            }
+            .resume-sidebar {
+              flex: 0 0 260px; background: linear-gradient(180deg, #0f766e 0%, #115e59 100%);
+              color: #fff; padding: 48px 28px 40px; display: flex; flex-direction: column;
+            }
+            .resume-name { font-size: 28px; font-weight: 800; line-height: 1.25; margin-bottom: 10px; }
+            .resume-role {
+              font-size: 13px; font-weight: 600; opacity: 0.9; margin-bottom: 32px;
+              padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.25);
+            }
+            .resume-contact { font-size: 12px; line-height: 1.8; opacity: 0.85; margin-top: auto; }
+            .resume-main { flex: 1; padding: 48px 44px 56px; min-width: 0; }
+            .content h2 { color: #0f766e; border-bottom: 2px solid #99f6e4; }
+            .content h3 { color: #134e4a; }
+            .content strong { color: #0f766e; }
+            .content em { color: #6b7280; }
+            .content pre { background: #f0fdfa; color: #134e4a; }
+            .content code { background: #ccfbf1; color: #0f766e; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; flex-direction: column; box-shadow: none; }
+            body.mode-mobile .resume-sidebar { flex: none; padding: 36px 24px 28px; }
+            body.mode-mobile .resume-main { padding: 32px 24px 48px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <aside class="resume-sidebar">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </aside>
+            <main class="resume-main">
+              <div class="content">${htmlContent}</div>
+            </main>
+          `,
+        },
+        tech: {
+          css: `
+            body { background: #0f172a; font-family: "JetBrains Mono", "Inter", monospace; color: #e2e8f0; }
+            .page {
+              width: 100%; max-width: 820px; min-height: 100vh; margin: 32px auto;
+              background: #1e1e2e; padding: 0 0 48px;
+              box-shadow: 0 0 40px rgba(124, 58, 237, 0.15);
+              border: 1px solid #312e81;
+              border-radius: 8px; overflow: hidden;
+            }
+            .resume-header {
+              background: #181825; padding: 16px 24px;
+              border-bottom: 1px solid #313244;
+              display: flex; align-items: center; gap: 8px;
+            }
+            .terminal-dots { display: flex; gap: 6px; }
+            .terminal-dots span { width: 12px; height: 12px; border-radius: 50%; }
+            .terminal-dots span:nth-child(1) { background: #f38ba8; }
+            .terminal-dots span:nth-child(2) { background: #fab387; }
+            .terminal-dots span:nth-child(3) { background: #a6e3a1; }
+            .terminal-title { font-size: 12px; color: #6c7086; margin-left: 8px; }
+            .resume-intro { padding: 32px 40px 0; }
+            .resume-name { font-size: 32px; font-weight: 700; color: #cba6f7; margin-bottom: 6px; }
+            .resume-role { font-size: 14px; color: #a6e3a1; margin-bottom: 4px; }
+            .resume-role::before { content: "$ role --set "; color: #6c7086; }
+            .resume-contact { font-size: 12px; color: #89b4fa; margin-bottom: 8px; }
+            .resume-contact::before { content: "# contact: "; color: #6c7086; }
+            .resume-body { padding: 16px 40px 0; }
+            .content h2 { color: #cba6f7; border-bottom: 1px dashed #45475a; font-family: "JetBrains Mono", monospace; }
+            .content h3 { color: #f9e2af; font-family: "Inter", sans-serif; }
+            .content strong { color: #89b4fa; }
+            .content em { color: #6c7086; }
+            .content li::marker { color: #a6e3a1; }
+            .content pre { background: #11111b; color: #cdd6f4; border: 1px solid #313244; }
+            .content code { background: #313244; color: #f38ba8; }
+            body.mode-mobile { background: #1e1e2e; }
+            body.mode-mobile .page { margin: 0; border-radius: 0; border: none; }
+            body.mode-mobile .resume-intro, body.mode-mobile .resume-body { padding-left: 24px; padding-right: 24px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <div class="terminal-dots"><span></span><span></span><span></span></div>
+              <span class="terminal-title">~/resume/${name.toLowerCase().replace(/\s+/g, "-")}</span>
+            </header>
+            <div class="resume-intro">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </div>
+            <div class="resume-body">
+              <div class="content">${htmlContent}</div>
+            </div>
+          `,
+        },
+        elegant: {
+          css: `
+            body { background: #f5f0eb; font-family: "Noto Serif SC", "Playfair Display", serif; color: #3d2c1e; }
+            .page {
+              width: 100%; max-width: 780px; min-height: 100vh; margin: 40px auto;
+              background: #fffcf8; padding: 64px 68px 80px;
+              box-shadow: 0 2px 20px rgba(61,44,30,0.08);
+              border-top: 4px solid #92400e;
+            }
+            .resume-header { text-align: center; margin-bottom: 40px; }
+            .resume-name {
+              font-family: "Playfair Display", "Noto Serif SC", serif;
+              font-size: 40px; font-weight: 900; color: #78350f; letter-spacing: 0.06em; margin-bottom: 10px;
+            }
+            .resume-role { font-size: 14px; color: #a16207; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; }
+            .resume-contact { font-size: 13px; color: #78716c; }
+            .resume-divider { width: 60px; height: 1px; background: #d6b38a; margin: 0 auto 36px; }
+            .content h2 { color: #92400e; border-bottom: 1px solid #e7d5c4; font-family: "Playfair Display", serif; letter-spacing: 0.08em; }
+            .content h3 { color: #78350f; }
+            .content strong { color: #92400e; }
+            .content em { color: #a8a29e; }
+            .content pre { background: #faf5f0; color: #57534e; border: 1px solid #e7d5c4; }
+            .content code { background: #fef3c7; color: #92400e; }
+            body.mode-mobile { background: #fffcf8; }
+            body.mode-mobile .page { margin: 0; padding: 48px 28px 64px; box-shadow: none; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="resume-divider"></div>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+        creative: {
+          css: `
+            body { background: #fce7f3; font-family: "Inter", "PingFang SC", sans-serif; color: #4a044e; }
+            .page {
+              width: 100%; max-width: 800px; min-height: 100vh; margin: 32px auto;
+              background: #fff; overflow: hidden;
+              box-shadow: 0 12px 40px rgba(219,39,119,0.15); border-radius: 16px;
+            }
+            .resume-hero {
+              background: linear-gradient(135deg, #db2777 0%, #7c3aed 50%, #2563eb 100%);
+              color: #fff; padding: 48px 48px 40px;
+            }
+            .resume-name { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
+            .resume-role {
+              display: inline-block; font-size: 13px; font-weight: 600;
+              background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 999px;
+              margin-bottom: 14px; backdrop-filter: blur(4px);
+            }
+            .resume-contact { font-size: 13px; opacity: 0.9; }
+            .resume-body { padding: 36px 48px 56px; }
+            .content h2 {
+              color: #db2777; border-bottom: none;
+              display: inline-block; background: linear-gradient(90deg, #fce7f3, transparent);
+              padding: 4px 12px 4px 0; border-radius: 4px;
+            }
+            .content h3 { color: #7c3aed; }
+            .content strong { color: #db2777; }
+            .content em { color: #a855f7; }
+            .content li::marker { color: #db2777; }
+            .content pre { background: #fdf4ff; color: #6b21a8; border: 1px solid #f0abfc; }
+            .content code { background: #fce7f3; color: #be185d; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; border-radius: 0; box-shadow: none; }
+            body.mode-mobile .resume-hero { padding: 36px 28px 32px; }
+            body.mode-mobile .resume-body { padding: 28px 24px 48px; }
+            body.mode-mobile .resume-name { font-size: 30px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-hero">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="resume-body">
+              <div class="content">${htmlContent}</div>
+            </div>
+          `,
+        },
+        academic: {
+          css: `
+            body { background: #e5e7eb; font-family: "Times New Roman", "Noto Serif SC", serif; color: #111827; }
+            .page {
+              width: 100%; max-width: 800px; min-height: 100vh; margin: 36px auto;
+              background: #fff; padding: 56px 72px 72px;
+              box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            }
+            .resume-header { text-align: center; margin-bottom: 32px; }
+            .resume-name { font-size: 28px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 6px; }
+            .resume-role { font-size: 14px; font-style: italic; color: #374151; margin-bottom: 8px; }
+            .resume-contact { font-size: 12px; color: #6b7280; }
+            .content h2 {
+              color: #111827; border-bottom: 1px solid #111827;
+              font-size: 14px; font-variant: small-caps; letter-spacing: 0.06em;
+            }
+            .content h3 { font-size: 14px; font-weight: 700; }
+            .content p { text-align: justify; }
+            .content em { color: #6b7280; }
+            .content pre { background: #f9fafb; color: #374151; border: 1px solid #d1d5db; font-size: 11px; }
+            .content code { background: #f3f4f6; color: #1f2937; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; padding: 40px 28px 56px; box-shadow: none; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+        compact: {
+          css: `
+            body { background: #d1fae5; font-family: "Inter", "PingFang SC", sans-serif; color: #1f2937; font-size: 13px; }
+            .page {
+              width: 100%; max-width: 780px; min-height: 100vh; margin: 24px auto;
+              background: #fff; padding: 32px 40px 40px;
+              box-shadow: 0 2px 16px rgba(5,150,105,0.1);
+            }
+            .resume-header {
+              display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px;
+              padding-bottom: 12px; margin-bottom: 4px;
+              border-bottom: 2px solid #059669;
+            }
+            .resume-name { font-size: 22px; font-weight: 800; color: #047857; }
+            .resume-role { font-size: 13px; color: #059669; font-weight: 600; }
+            .resume-contact { font-size: 11px; color: #6b7280; width: 100%; }
+            .content h2 { font-size: 12px; color: #047857; border-bottom: 1px solid #a7f3d0; margin: 16px 0 8px; }
+            .content h3 { font-size: 12px; margin: 10px 0 4px; }
+            .content p { margin: 0 0 6px; line-height: 1.5; font-size: 12px; }
+            .content ul, .content ol { margin: 4px 0 8px; }
+            .content li { margin: 2px 0; font-size: 12px; line-height: 1.45; }
+            .content strong { color: #047857; }
+            .content em { color: #6b7280; font-size: 11px; }
+            .content pre { background: #ecfdf5; font-size: 10px; padding: 8px 10px; }
+            .content code { background: #d1fae5; color: #047857; font-size: 11px; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; padding: 24px 20px 32px; box-shadow: none; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <h1 class="resume-name">${name}</h1>
+              <span class="resume-role">${role}</span>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+        product: {
+          css: `
+            body { background: #eff6ff; font-family: "Inter", "PingFang SC", sans-serif; color: #0f172a; }
+            .page {
+              width: 100%; max-width: 860px; min-height: 100vh; margin: 34px auto;
+              background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+              padding: 0; overflow: hidden; border-radius: 18px;
+              box-shadow: 0 18px 46px rgba(37,99,235,0.12), 0 0 0 1px rgba(37,99,235,0.10);
+            }
+            .resume-header { padding: 42px 48px 32px; background: radial-gradient(circle at 8% 10%, #dbeafe, transparent 34%), linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); border-bottom: 1px solid #dbeafe; }
+            .resume-kicker { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; color: #2563eb; background: #dbeafe; font-size: 11px; font-weight: 800; margin-bottom: 14px; }
+            .resume-name { font-size: 38px; line-height: 1.1; font-weight: 900; letter-spacing: -0.04em; color: #1e3a8a; margin-bottom: 10px; }
+            .resume-role { font-size: 15px; color: #1d4ed8; font-weight: 700; margin-bottom: 12px; }
+            .resume-contact { font-size: 12px; color: #64748b; }
+            .resume-body { padding: 34px 48px 58px; }
+            .content h2 { color: #1d4ed8; border-bottom: 1px solid #bfdbfe; }
+            .content h3 { color: #0f172a; }
+            .content strong { color: #2563eb; }
+            .content em { color: #64748b; }
+            .content li::marker { color: #2563eb; }
+            .content pre { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+            .content code { background: #dbeafe; color: #1d4ed8; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; border-radius: 0; box-shadow: none; }
+            body.mode-mobile .resume-header { padding: 38px 26px 28px; }
+            body.mode-mobile .resume-body { padding: 28px 24px 48px; }
+            body.mode-mobile .resume-name { font-size: 30px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <div class="resume-kicker">PRODUCT RESUME</div>
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="resume-body">
+              <div class="content">${htmlContent}</div>
+            </div>
+          `,
+        },
+        dark: {
+          css: `
+            body { background: #020617; font-family: "Inter", "JetBrains Mono", sans-serif; color: #d1fae5; }
+            .page {
+              width: 100%; max-width: 820px; min-height: 100vh; margin: 34px auto;
+              background: linear-gradient(180deg, #06111f 0%, #020617 100%);
+              padding: 46px 52px 64px; border-radius: 20px;
+              border: 1px solid rgba(34,197,94,0.32);
+              box-shadow: 0 0 0 1px rgba(34,197,94,0.12), 0 22px 60px rgba(0,0,0,0.45), 0 0 54px rgba(34,197,94,0.12);
+            }
+            .resume-header { position: relative; padding-bottom: 30px; margin-bottom: 10px; border-bottom: 1px solid rgba(34,197,94,0.28); }
+            .resume-header::before { content: ""; position: absolute; top: -16px; right: 0; width: 120px; height: 120px; background: radial-gradient(circle, rgba(34,197,94,0.18), transparent 66%); pointer-events: none; }
+            .resume-name { font-size: 38px; line-height: 1.1; font-weight: 900; color: #bbf7d0; letter-spacing: -0.03em; margin-bottom: 10px; text-shadow: 0 0 22px rgba(34,197,94,0.18); }
+            .resume-role { display: inline-flex; font-size: 13px; color: #22c55e; border: 1px solid rgba(34,197,94,0.32); background: rgba(34,197,94,0.08); border-radius: 999px; padding: 5px 12px; margin-bottom: 14px; font-weight: 800; }
+            .resume-contact { font-size: 12px; color: #93c5fd; }
+            .content h2 { color: #86efac; border-bottom: 1px solid rgba(34,197,94,0.24); }
+            .content h3 { color: #bfdbfe; }
+            .content p, .content li { color: #cbd5e1; }
+            .content strong { color: #22c55e; }
+            .content em { color: #94a3b8; }
+            .content li::marker { color: #22c55e; }
+            .content pre { background: #020617; color: #bbf7d0; border: 1px solid rgba(34,197,94,0.24); }
+            .content code { background: rgba(34,197,94,0.12); color: #86efac; }
+            body.mode-mobile { background: #020617; }
+            body.mode-mobile .page { margin: 0; border-radius: 0; box-shadow: none; padding: 40px 26px 56px; }
+            body.mode-mobile .resume-name { font-size: 30px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <h1 class="resume-name">${name}</h1>
+              <div class="resume-role">${role}</div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+        magazine: {
+          css: `
+            body { background: #fff1f2; font-family: "Playfair Display", "Noto Serif SC", serif; color: #1f2937; }
+            .page {
+              width: 100%; max-width: 820px; min-height: 100vh; margin: 36px auto;
+              background: #fff; padding: 58px 62px 76px;
+              box-shadow: 0 18px 50px rgba(225,29,72,0.10);
+              border: 1px solid #ffe4e6;
+            }
+            .resume-header { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: end; padding-bottom: 28px; border-bottom: 6px solid #111827; margin-bottom: 18px; }
+            .resume-name { font-size: 50px; line-height: 0.95; font-weight: 900; letter-spacing: -0.06em; color: #111827; max-width: 520px; }
+            .resume-side { writing-mode: vertical-rl; text-orientation: mixed; color: #e11d48; font-family: "Inter", sans-serif; font-size: 11px; font-weight: 900; letter-spacing: 0.18em; }
+            .resume-role { font-family: "Inter", sans-serif; display: inline-block; margin-top: 18px; font-size: 13px; font-weight: 900; color: #e11d48; letter-spacing: 0.08em; text-transform: uppercase; }
+            .resume-contact { font-family: "Inter", sans-serif; font-size: 12px; color: #64748b; margin-top: 10px; }
+            .content { font-family: "Noto Serif SC", serif; }
+            .content h2 { font-family: "Inter", sans-serif; color: #111827; border-bottom: 1px solid #fecdd3; font-size: 13px; }
+            .content h3 { color: #9f1239; }
+            .content strong { color: #e11d48; }
+            .content em { color: #64748b; }
+            .content li::marker { color: #e11d48; }
+            .content pre { background: #fff1f2; color: #881337; border: 1px solid #fecdd3; }
+            .content code { background: #ffe4e6; color: #be123c; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; padding: 44px 26px 56px; box-shadow: none; border: none; }
+            body.mode-mobile .resume-header { grid-template-columns: 1fr; border-bottom-width: 4px; }
+            body.mode-mobile .resume-side { writing-mode: initial; }
+            body.mode-mobile .resume-name { font-size: 36px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <div>
+                <h1 class="resume-name">${name}</h1>
+                <div class="resume-role">${role}</div>
+                <div class="resume-contact">${contact}</div>
+              </div>
+              <div class="resume-side">PORTFOLIO / RESUME</div>
+            </header>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+        timeline: {
+          css: `
+            body { background: #fff7ed; font-family: "Inter", "PingFang SC", sans-serif; color: #1f2937; }
+            .page {
+              width: 100%; max-width: 840px; min-height: 100vh; margin: 34px auto;
+              background: #fff; padding: 48px 58px 68px;
+              box-shadow: 0 14px 42px rgba(249,115,22,0.12);
+              border-radius: 18px;
+            }
+            .resume-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding-bottom: 26px; margin-bottom: 8px; border-bottom: 1px solid #fed7aa; }
+            .resume-name { font-size: 36px; line-height: 1.1; font-weight: 900; color: #9a3412; letter-spacing: -0.04em; margin-bottom: 8px; }
+            .resume-role { font-size: 14px; color: #ea580c; font-weight: 800; }
+            .resume-contact { max-width: 260px; text-align: right; font-size: 12px; color: #78716c; line-height: 1.7; }
+            .content { position: relative; padding-left: 26px; }
+            .content::before { content: ""; position: absolute; top: 18px; bottom: 0; left: 6px; width: 2px; background: linear-gradient(180deg, #fb923c, #fed7aa); }
+            .content h2 { position: relative; color: #c2410c; border-bottom: 1px solid #fed7aa; }
+            .content h2::before { content: ""; position: absolute; left: -26px; top: 8px; width: 12px; height: 12px; border-radius: 50%; background: #f97316; box-shadow: 0 0 0 4px #ffedd5; }
+            .content h3 { color: #7c2d12; }
+            .content strong { color: #ea580c; }
+            .content em { color: #78716c; }
+            .content li::marker { color: #f97316; }
+            .content pre { background: #fff7ed; color: #7c2d12; border: 1px solid #fed7aa; }
+            .content code { background: #ffedd5; color: #c2410c; }
+            body.mode-mobile { background: #fff; }
+            body.mode-mobile .page { margin: 0; padding: 38px 24px 56px; border-radius: 0; box-shadow: none; }
+            body.mode-mobile .resume-header { flex-direction: column; }
+            body.mode-mobile .resume-contact { text-align: left; max-width: none; }
+            body.mode-mobile .resume-name { font-size: 30px; }
+            ${CONTENT_BASE}
+          `,
+          html: `
+            <header class="resume-header">
+              <div>
+                <h1 class="resume-name">${name}</h1>
+                <div class="resume-role">${role}</div>
+              </div>
+              <div class="resume-contact">${contact}</div>
+            </header>
+            <div class="content">${htmlContent}</div>
+          `,
+        },
+      };
+
+      return themes[theme] || themes.professional;
+    }
+
+    function generatePage(mode) {
+      const isMobile = mode === "mobile";
+      const name = escapeHtml(resumeMeta.name || "");
+      const role = escapeHtml(resumeMeta.role || "");
+      const contact = escapeHtml(buildContactLine(resumeMeta));
+      const htmlContent = marked.parse(resumeBody || buildBodyFromSections() || "");
+      const currentTheme = themeSelect.value;
+      const { css: themeCSS, html: themeHTML } = buildTheme(currentTheme, name, role, contact, htmlContent, isMobile);
+
+      return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+<style>
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { overflow-x: hidden; max-width: 100%; }
+.page { max-width: 100%; overflow-x: hidden; }
+.content pre { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+${themeCSS}
+@media print {
+  @page { margin: 10mm; size: A4; }
+  html, body { overflow: visible !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: transparent !important; }
+  .page { box-shadow: none !important; margin: 0 auto !important; min-height: auto !important; }
+  .content h2, .content h3 { page-break-after: avoid; }
+  .content pre, .content table, .content tr { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body class="${isMobile ? "mode-mobile" : "mode-desktop"}">
+<div class="page">${themeHTML}</div>
+</body>
+</html>`;
+    }
+
+    function initDevices() {
+      DEVICES.forEach((device, index) => {
+        const tab = deviceSwitcher.querySelector(`[data-device="${device.id}"]`);
+        if (tab) tab.addEventListener("click", () => switchDevice(device.id));
+        const view = document.createElement("div");
+        view.className = "device-view" + (index === 0 ? " is-active" : "");
+        view.dataset.device = device.id;
+        view.setAttribute("role", "tabpanel");
+        view.innerHTML = device.frameHtml;
+        deviceStage.appendChild(view);
+      });
+    }
+
+    function switchDevice(id) {
+      if (id === activeDeviceId) return;
+      activeDeviceId = id;
+      deviceSwitcher.querySelectorAll(".device-tab").forEach((tab) => {
+        const isActive = tab.dataset.device === id;
+        tab.classList.toggle("active", isActive);
+        tab.setAttribute("aria-selected", isActive ? "true" : "false");
+      });
+      deviceStage.querySelectorAll(".device-view").forEach((view) => {
+        view.classList.toggle("is-active", view.dataset.device === id);
+      });
+    }
+
+    function updatePreview() {
+      DEVICES.forEach((device) => {
+        const iframe = deviceStage.querySelector(`.device-view[data-device="${device.id}"] iframe[data-preview]`);
+        if (iframe) iframe.srcdoc = generatePage(device.mode);
+      });
+    }
+
+    async function waitForFrameAssets(iframe) {
+      const doc = iframe?.contentDocument;
+      if (!doc) return;
+      if (doc.fonts?.ready) {
+        try { await doc.fonts.ready; } catch (_) {}
+      }
+      const pending = Array.from(doc.images || []).filter((img) => !img.complete);
+      if (pending.length) {
+        await Promise.allSettled(pending.map((img) => new Promise((resolve) => {
+          img.addEventListener("load", resolve, { once: true });
+          img.addEventListener("error", resolve, { once: true });
+        })));
+      }
+    }
+
+    function getExportFileName(ext) {
+      const safe = (resumeMeta.name || "resume").trim()
+        .replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "-").slice(0, 60);
+      return `${safe}.${ext}`;
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function generateWordHtml() {
+      const html = generatePage("desktop");
+      const officeAttrs = 'xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"';
+      const officeMeta = `<meta name="ProgId" content="Word.Document" />
+<meta name="Generator" content="Markdown Resume Preview" />
+<style>@page WordSection1 { size: 21cm 29.7cm; margin: 1.5cm; } div.WordSection1 { page: WordSection1; }</style>`;
+      return html
+        .replace('<html lang="zh-CN">', `<html lang="zh-CN" ${officeAttrs}>`)
+        .replace("</head>", `${officeMeta}\n</head>`)
+        .replace('<body class="mode-desktop">', '<body class="mode-desktop"><div class="WordSection1">')
+        .replace("</body>", "</div></body>");
+    }
+
+
+    function setEditorPanelCollapsed(collapsed, options = {}) {
+      if (!appRoot || !panelToggleBtn) return;
+      appRoot.classList.toggle("panel-collapsed", collapsed);
+      panelToggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      panelToggleBtn.title = collapsed ? "展开左侧编辑区" : "收起左侧编辑区";
+      if (panelToggleText) panelToggleText.textContent = collapsed ? "展开" : "收起";
+      if (panelToggleIcon) panelToggleIcon.textContent = collapsed ? "›" : "‹";
+      if (!options.skipPersist) {
+        localStorage.setItem("resume-preview-panel-collapsed", collapsed ? "1" : "0");
+      }
+    }
+
+    exportPdfBtn.addEventListener("click", async () => {
+      commitActiveEditor();
+      updatePreview();
+      const pcIframe = document.getElementById("previewIframePc");
+      if (pcIframe?.contentWindow) {
+        await waitForFrameAssets(pcIframe);
+        pcIframe.contentWindow.focus();
+        setTimeout(() => pcIframe.contentWindow.print(), 50);
+      } else {
+        alert("未能找到预览窗口，请确认页面已加载。");
+      }
+    });
+
+    exportWordBtn.addEventListener("click", async () => {
+      commitActiveEditor();
+      updatePreview();
+      const pcIframe = document.getElementById("previewIframePc");
+      if (pcIframe) await waitForFrameAssets(pcIframe);
+      const blob = new Blob(["\ufeff", generateWordHtml()], { type: "application/msword;charset=utf-8" });
+      downloadBlob(blob, getExportFileName("doc"));
+    });
+
+    panelToggleBtn?.addEventListener("click", () => {
+      setEditorPanelCollapsed(!appRoot.classList.contains("panel-collapsed"));
+    });
+
+    document.querySelectorAll("[data-editor-mode]").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        activeEditorMode = tab.dataset.editorMode;
+        document.querySelectorAll("[data-editor-mode]").forEach((item) => {
+          const isActive = item.dataset.editorMode === activeEditorMode;
+          item.classList.toggle("active", isActive);
+          item.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+        visualEditor.classList.toggle("active", activeEditorMode === "visual");
+        sourceEditor.classList.toggle("active", activeEditorMode === "source");
+        sourceEditor.hidden = activeEditorMode !== "source";
+        visualEditor.hidden = activeEditorMode !== "visual";
+        if (activeEditorMode === "source") {
+          markdownEditor.value = serializeMarkdown();
+          sourceStatus.textContent = "Markdown 已同步";
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-meta-key]").forEach((input) => {
+      input.addEventListener("input", syncMarkdownFromEditor);
+    });
+
+    sectionList.addEventListener("input", syncMarkdownFromEditor);
+    sectionList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-section-action]");
+      if (!button) return;
+      const item = button.closest(".resume-section-item");
+      const index = Number(item?.dataset.index);
+      if (!Number.isFinite(index)) return;
+      readSectionsFromForm();
+      resumeSections.splice(index, 1);
+      renderSectionsEditor();
+      syncMarkdownFromEditor();
+    });
+
+    addSectionBtn.addEventListener("click", () => {
+      readSectionsFromForm();
+      resumeSections.push({ title: "新章节", body: "" });
+      renderSectionsEditor();
+      syncMarkdownFromEditor();
+      const lastItem = sectionList.querySelector(".resume-section-item:last-child .section-title-input");
+      if (lastItem) lastItem.focus();
+    });
+
+    customMetaList.addEventListener("input", syncMarkdownFromEditor);
+    customMetaList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-meta-action]");
+      if (!button) return;
+      const item = button.closest(".custom-meta-item");
+      const index = Number(item?.dataset.index);
+      if (!Number.isFinite(index)) return;
+      readCustomMetaFromForm();
+      customMetaEntries.splice(index, 1);
+      renderCustomMetaEditor();
+      syncMarkdownFromEditor();
+    });
+
+    addMetaBtn.addEventListener("click", () => {
+      readCustomMetaFromForm();
+      customMetaEntries.push({ key: "", value: "" });
+      renderCustomMetaEditor();
+      const lastKey = customMetaList.querySelector(".custom-meta-item:last-child .custom-meta-key");
+      if (lastKey) lastKey.focus();
+    });
+
+    markdownEditor.addEventListener("input", () => {
+      sourceStatus.textContent = "源码有未应用修改";
+    });
+
+    applySourceBtn.addEventListener("click", () => {
+      applyResumeMarkdown(markdownEditor.value);
+      sourceStatus.textContent = "Markdown 已应用";
+      updatePreview();
+    });
+
+    reloadMdBtn.addEventListener("click", async () => {
+      try {
+        await loadTemplate(currentTemplateFile);
+        updatePreview();
+      } catch (error) {
+        console.error(error);
+        alert(`重新加载失败，请确认 ${currentTemplateFile} 存在且本地服务已启动。`);
+      }
+    });
+
+    templateSelect?.addEventListener("change", async () => {
+      const next = templateSelect.value;
+      if (!next || next === currentTemplateFile) return;
+      try {
+        await loadTemplate(next);
+        updatePreview();
+      } catch (error) {
+        console.error(error);
+        templateSelect.value = currentTemplateFile;
+        alert(`切换模版失败：${next}`);
+      }
+    });
+
+    downloadMdBtn.addEventListener("click", () => {
+      commitActiveEditor();
+      downloadBlob(
+        new Blob([markdownContent], { type: "text/markdown;charset=utf-8" }),
+        getExportFileName("md")
+      );
+    });
+
+    mdFile.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      applyResumeMarkdown(text);
+      updatePreview();
+      e.target.value = "";
+    });
+
+    themeSelect.addEventListener("change", () => {
+      applyThemeConfig();
+      resumeMeta.theme = themeSelect.value;
+      syncMarkdownFromEditor();
+    });
+
+    async function initApp() {
+      initDevices();
+      setEditorPanelCollapsed(localStorage.getItem("resume-preview-panel-collapsed") === "1", { skipPersist: true });
+      try {
+        templateFiles = await discoverResumeTemplates();
+        const saved = localStorage.getItem(TEMPLATE_STORAGE_KEY);
+        currentTemplateFile = templateFiles.includes(saved) ? saved : (templateFiles[0] || DEFAULT_TEMPLATE);
+        renderTemplateSelect();
+        await loadTemplate(currentTemplateFile);
+        applyThemeConfig();
+        updatePreview();
+      } catch (error) {
+        console.error(error);
+        alert(
+          "无法加载简历模版。\n\n" +
+          "请在本目录启动本地服务后访问，例如：\n" +
+          "python3 -m http.server 8080\n" +
+          "然后打开 http://localhost:8080/markdown-resume-preview-1.html"
+        );
+      }
+    }
+
+    initApp();
+  </script>
+</body>
+</html>

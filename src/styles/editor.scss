@@ -1,0 +1,128 @@
+.editor-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--rs-border);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__body {
+    flex: 1;
+    overflow: auto;
+    padding: 16px 18px 24px;
+  }
+
+  &__section {
+    margin-bottom: 18px;
+  }
+
+  &__section-title {
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rs-text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.theme-card {
+  padding: 12px;
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  background: var(--rs-surface-2);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &.is-active {
+    border-color: var(--rs-accent);
+    box-shadow: 0 0 0 3px var(--rs-accent-soft);
+  }
+
+  &__badge {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  &__name {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  &__desc {
+    display: block;
+    font-size: 11px;
+    color: var(--rs-text-muted);
+    line-height: 1.4;
+  }
+}
+
+.meta-form,
+.section-editor,
+.custom-meta-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.section-item {
+  padding: 12px;
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  background: var(--rs-surface-2);
+}
+
+.source-editor {
+  min-height: 600px;
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  overflow: hidden;
+
+  .cm-editor {
+    min-height: 600px;
+    font-size: 13px;
+  }
+
+  .cm-scroller {
+    min-height: 600px;
+  }
+}
+
+@media (max-width: 960px) {
+  .source-editor,
+  .source-editor .cm-editor,
+  .source-editor .cm-scroller {
+    min-height: 420px;
+  }
+}
