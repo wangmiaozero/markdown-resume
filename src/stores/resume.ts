@@ -1,11 +1,8 @@
 import { defineStore } from 'pinia';
 import { parseMarkdownDocument, serializeMarkdown } from '@/features/markdown';
 import { isThemeId } from '@/features/themes/themeRegistry';
-import { writeStorageString, readStorageString } from '@/utils/localStorage';
 import { useThemeStore } from './theme';
 import type { ResumeMeta, ResumeSection } from '@/types/resume';
-
-const DRAFT_KEY = 'resume-studio:draft';
 
 function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -42,24 +39,31 @@ export const useResumeStore = defineStore('resume', {
   },
 
   actions: {
-    async bootstrap(defaultMarkdown: string) {
-      const saved = readStorageString(DRAFT_KEY, '');
-      const text = saved.trim() || defaultMarkdown;
-      this.loadFromMarkdown(text);
-      this.initialized = true;
-    },
-
     loadFromMarkdown(text: string) {
       const doc = parseMarkdownDocument(text);
       this.meta = { ...doc.meta };
       this.sections = doc.sections.map((s) => ({ ...s }));
       this.rawMarkdown = doc.rawMarkdown;
       this.sourceDraft = doc.rawMarkdown;
-      this.persistDraft();
 
       const themeStore = useThemeStore();
       if (doc.meta.theme && isThemeId(doc.meta.theme)) {
         themeStore.setTheme(doc.meta.theme);
+      }
+    },
+
+    setMarkdownContent(text: string) {
+      const doc = parseMarkdownDocument(text);
+      this.meta = { ...doc.meta };
+      this.sections = doc.sections.map((s) => ({ ...s }));
+      this.rawMarkdown = doc.rawMarkdown;
+      this.sourceDraft = doc.rawMarkdown;
+
+      const themeStore = useThemeStore();
+      if (doc.meta.theme && isThemeId(doc.meta.theme)) {
+        if (themeStore.currentThemeId !== doc.meta.theme) {
+          themeStore.setTheme(doc.meta.theme);
+        }
       }
     },
 
@@ -112,11 +116,6 @@ export const useResumeStore = defineStore('resume', {
     syncFromVisual() {
       this.rawMarkdown = this.markdown;
       this.sourceDraft = this.rawMarkdown;
-      this.persistDraft();
-    },
-
-    persistDraft() {
-      writeStorageString(DRAFT_KEY, this.rawMarkdown);
     },
   },
 });

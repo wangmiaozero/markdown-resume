@@ -1,38 +1,49 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import AppHeader from '@/components/layout/AppHeader.vue';
 import EditorPanel from '@/features/editor/EditorPanel.vue';
 import PreviewPanel from '@/features/preview/PreviewPanel.vue';
-import { useUiStore } from '@/stores/ui';
+import { useResumeStudio } from '@/composables/useResumeStudio';
 
-const ui = useUiStore();
-
-const appClass = computed(() => ({
-  app: true,
-  'panel-collapsed': ui.sidebarCollapsed,
-}));
-
-function togglePanel() {
-  ui.toggleSidebar();
-}
+const {
+  ready,
+  markdownContent,
+  panelConfig,
+  onThemeChange,
+  onImportFile,
+  onExportPdf,
+  onExportWord,
+  scheduleIdleSave,
+  flushSave,
+} = useResumeStudio();
 </script>
 
 <template>
-  <div :class="appClass">
-    <EditorPanel />
-
-    <button
-      id="panelToggleBtn"
-      class="panel-toggle-btn"
-      type="button"
-      aria-controls="editorPanel"
-      :aria-expanded="!ui.sidebarCollapsed"
-      :title="ui.sidebarCollapsed ? '展开左侧编辑区' : '收起左侧编辑区'"
-      @click="togglePanel"
-    >
-      <span class="panel-toggle-icon" aria-hidden="true">{{ ui.sidebarCollapsed ? '›' : '‹' }}</span>
-      <span class="panel-toggle-text">{{ ui.sidebarCollapsed ? '展开' : '收起' }}</span>
-    </button>
-
-    <PreviewPanel />
+  <div v-if="ready" class="app">
+    <AppHeader
+      :panel-config="panelConfig"
+      @theme-change="onThemeChange"
+      @file-upload="onImportFile"
+      @export-pdf="onExportPdf"
+      @export-word="onExportWord"
+    />
+    <div class="workspace">
+      <EditorPanel
+        v-model:markdown-content="markdownContent"
+        @content-change="scheduleIdleSave"
+        @content-blur="flushSave"
+      />
+      <PreviewPanel />
+    </div>
   </div>
+  <div v-else class="boot-screen">正在加载 Resume Preview…</div>
 </template>
+
+<style scoped>
+.boot-screen {
+  display: grid;
+  place-items: center;
+  height: 100dvh;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+}
+</style>

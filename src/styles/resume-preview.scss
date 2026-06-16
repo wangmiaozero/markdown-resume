@@ -40,85 +40,36 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-    .app { display: flex; height: 100dvh; min-height: 100dvh; }
-
-    .editor-panel {
-      flex: 0 0 var(--panel-width);
-      width: var(--panel-width);
-      background: var(--bg-panel);
-      border-right: 1px solid var(--border-light);
+    .app {
       display: flex;
       flex-direction: column;
-      z-index: 10;
-      box-shadow: 8px 0 30px -22px rgba(15, 23, 42, 0.35);
-      overflow: hidden;
-      transition: flex-basis 0.24s ease, width 0.24s ease, transform 0.24s ease, opacity 0.18s ease;
-      will-change: width, transform;
+      height: 100dvh;
+      min-height: 100dvh;
     }
 
-    .panel-toggle-btn {
-      position: fixed;
-      top: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px) + 14px);
-      left: calc(var(--panel-width) - 16px);
-      z-index: 40;
-      height: 34px;
-      min-width: 34px;
-      padding: 0 11px;
-      border: 1px solid var(--border-light);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.92);
-      color: var(--text-main);
-      box-shadow: var(--shadow-md);
-      backdrop-filter: blur(12px);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: left 0.24s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
-    }
-    .panel-toggle-btn:hover {
-      color: var(--accent);
-      border-color: var(--accent-muted);
-      background: #fff;
-      transform: translateY(-1px);
-    }
-    .panel-toggle-icon {
-      font-size: 18px;
-      line-height: 1;
-      transform: translateY(-1px);
-    }
-    .app.panel-collapsed .editor-panel {
-      flex-basis: 0;
-      width: 0;
-      opacity: 0;
-      transform: translateX(-100%);
-      pointer-events: none;
-      border-right: none;
-      box-shadow: none;
-    }
-    .app.panel-collapsed .panel-toggle-btn {
-      left: 14px;
-    }
-
-    .panel-brand {
+    .workspace {
+      flex: 1;
+      min-height: 0;
       display: flex;
-      align-items: center;
-      gap: 14px;
+    }
+
+    .app-header {
       flex-shrink: 0;
-      height: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-areas: "brand tools device";
+      align-items: center;
+      column-gap: 16px;
+      row-gap: 0;
+      box-sizing: border-box;
       min-height: calc(var(--header-bar-height) + env(safe-area-inset-top, 0px));
       padding: env(safe-area-inset-top, 0px) 20px 0;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.96)),
-        radial-gradient(circle at 12% 24%, var(--accent-soft), transparent 32%);
+      background: var(--bg-panel-card);
       border-bottom: 1px solid var(--border-light);
       position: relative;
+      z-index: 20;
     }
-    .panel-brand::after {
+    .app-header::after {
       content: "";
       position: absolute;
       left: 20px;
@@ -127,6 +78,161 @@
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--accent-muted), transparent);
       pointer-events: none;
+    }
+
+    .header-brand { grid-area: brand; }
+
+    .header-toolbar {
+      grid-area: tools;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 2px 0;
+    }
+    .header-toolbar::-webkit-scrollbar { display: none; }
+
+    .header-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .header-group--theme { min-width: 0; }
+
+    .header-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .header-select {
+      width: auto;
+      min-width: 180px;
+      max-width: 220px;
+      height: 38px;
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border-light);
+      flex-shrink: 0;
+    }
+
+    .header-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .header-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .header-btn--ghost {
+      background: #f8fafc;
+      color: var(--text-main);
+      border-color: var(--border-light);
+    }
+    .header-btn--ghost:hover {
+      background: #fff;
+      border-color: var(--accent-muted);
+    }
+    .header-btn--primary {
+      background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(14, 165, 233, 0.28);
+    }
+    .header-btn--primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+    }
+    .header-btn--secondary {
+      background: #fff;
+      color: var(--accent);
+      border-color: var(--accent-muted);
+    }
+    .header-btn--secondary:hover { background: var(--accent-soft); }
+
+    .header-btn-text--short { display: none; }
+
+    .header-export { gap: 10px; }
+    .header-export-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+      flex-shrink: 0;
+    }
+
+    .header-device { grid-area: device; flex-shrink: 0; }
+
+    .header-dropdown-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: min(360px, calc(100vw - 40px));
+      max-height: min(70vh, 520px);
+      overflow-y: auto;
+      padding: 16px;
+      background: var(--bg-panel-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 30;
+    }
+
+    .header-dropdown-head {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .header-dropdown-head strong {
+      font-size: 14px;
+      color: var(--text-main);
+    }
+    .header-dropdown-head p {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .editor-panel {
+      flex: 1;
+      min-width: 0;
+      background: var(--bg-panel-card);
+      border-right: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      padding-right: 8px;
+      position: relative;
     }
 
     .brand-mark {
@@ -762,26 +868,28 @@
     .device-switcher {
       display: inline-flex;
       background: #e2e8f0;
-      padding: 4px;
+      padding: 3px;
       border-radius: 10px;
-      gap: 4px;
+      gap: 3px;
     }
     .device-tab {
       height: 32px;
-      padding: 0 20px;
+      padding: 0 14px;
       border: none;
-      border-radius: 6px;
+      border-radius: 7px;
       background: transparent;
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       font-family: inherit;
       cursor: pointer;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
-    .device-tab svg { width: 16px; height: 16px; }
+    .device-tab svg { width: 15px; height: 15px; }
+    .device-tab:hover { color: var(--text-main); }
     .device-tab.active {
       background: #ffffff;
       color: var(--text-main);
@@ -895,22 +1003,31 @@
     .pc-url svg { width: 12px; height: 12px; margin-right: 6px; opacity: 0.6; }
     .pc-frame iframe { width: 100%; flex: 1; border: none; background: #ebe8e2; display: block; }
 
+    @media (max-width: 1100px) {
+      .header-btn-text { display: none; }
+      .header-btn-text--short { display: inline; }
+      .header-select { min-width: 140px; max-width: 160px; }
+    }
+
     @media (max-width: 860px) {
       body { overflow-x: hidden; overflow-y: auto; }
-      .app { flex-direction: column; height: auto; overflow-x: hidden; }
-      .editor-panel { width: 100%; flex: none; border-right: none; box-shadow: none; }
-      .panel-toggle-btn { top: 14px; left: auto; right: 14px; }
-      .app.panel-collapsed .editor-panel { display: none; }
-      .app.panel-collapsed .panel-toggle-btn { left: auto; right: 14px; }
-      #sourceEditor.active { min-height: auto; }
-      .md-editor { min-height: 520px; height: 64dvh; }
-      .panel-card--export { margin-top: 0; }
+      .app { height: auto; overflow-x: hidden; }
+      .workspace { flex-direction: column; }
+      .editor-panel { width: 100%; flex: none; border-right: none; min-height: 50dvh; }
+      .markdown-editor { min-height: 50dvh; }
       .preview-panel { min-height: 80dvh; }
       .device-stage { padding: 24px 16px; }
-      .preview-toolbar { padding-left: 16px; padding-right: 16px; }
-      .preview-toolbar-inner { grid-template-columns: 1fr; justify-items: center; height: auto; min-height: var(--header-bar-height); padding: 10px 0; }
-      .preview-status,
-      .preview-theme-label { justify-self: center; }
+      .app-header {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "brand"
+          "tools"
+          "device";
+        row-gap: 12px;
+        padding-bottom: 12px;
+      }
+      .header-toolbar { flex-wrap: wrap; }
+      .header-device { justify-self: end; }
     }
 
     @media (max-width: 520px) {
