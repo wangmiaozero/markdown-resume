@@ -1,5 +1,7 @@
 # markdown-resume
 
+[English](./README.en.md) | **简体中文**
+
 Markdown 简历排版预览 — Vue 3 + Vite 工程化版本。
 
 在线体验：https://wangmiaozero.github.io/markdown-resume/
