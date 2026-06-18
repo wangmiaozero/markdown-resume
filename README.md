@@ -1,6 +1,8 @@
-# Resume Studio
+# markdown-resume
 
 Markdown 简历排版预览 — Vue 3 + Vite 工程化版本。
+
+在线体验：https://wangmiaozero.github.io/markdown-resume/
 
 ## 快速开始
 
@@ -59,11 +61,21 @@ frontmatter 可选 `theme` 字段，切换模版后自动同步主题。
 
 ## 部署
 
+### GitHub Pages（推荐）
+
+推送到 `main` 分支后，Actions 会自动构建并发布到 GitHub Pages。
+
+首次需在仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
+
+访问地址：`https://wangmiaozero.github.io/markdown-resume/`
+
+### 本地构建
+
 ```bash
 pnpm build
 ```
 
-将 `dist/` 目录部署到任意静态托管（Nginx、GitHub Pages、Cloudflare Pages 等）。
+将 `dist/` 目录部署到任意静态托管（Nginx、Cloudflare Pages 等）。
 
 ## CI
 
