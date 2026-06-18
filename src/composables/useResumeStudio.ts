@@ -10,6 +10,7 @@ import { markdownToHtml } from '@/features/markdown';
 import { applyPanelAccent, getThemePanelConfig } from '@/features/themes/themePanelConfig';
 import { isThemeId } from '@/features/themes/themeRegistry';
 import { loadEditorState, saveEditorState } from '@/lib/editorStorage';
+import { escapeHtml } from '@/utils/escapeHtml';
 import type { ThemeId } from '@/features/themes/types';
 
 const SAVE_IDLE_MS = 600;
@@ -32,6 +33,13 @@ export function useResumeStudio() {
   });
 
   const panelConfig = computed(() => getThemePanelConfig(themeStore.currentThemeId));
+
+  function syncThemeFromMeta(theme?: string) {
+    if (!theme || !isThemeId(theme)) return;
+    if (themeStore.currentThemeId !== theme) {
+      themeStore.setTheme(theme as ThemeId);
+    }
+  }
 
   function flushSave() {
     if (!hydrated) return;
@@ -63,10 +71,8 @@ export function useResumeStudio() {
     if (!file) return;
     const text = await importMarkdownFile(file);
     resume.loadFromMarkdown(text);
-    if (resume.meta.theme && isThemeId(resume.meta.theme)) {
-      themeStore.setTheme(resume.meta.theme as ThemeId);
-      applyPanelAccent(getThemePanelConfig(resume.meta.theme as ThemeId).accent);
-    }
+    syncThemeFromMeta(resume.meta.theme);
+    applyPanelAccent(getThemePanelConfig(themeStore.currentThemeId).accent);
     flushSave();
   }
 
@@ -79,9 +85,11 @@ export function useResumeStudio() {
 
   function onExportWord() {
     const html = resume.sections
-      .map((s) => `<h2>${s.title}</h2>${markdownToHtml(s.body)}`)
+      .map((s) => `<h2>${escapeHtml(s.title)}</h2>${markdownToHtml(s.body)}`)
       .join('');
-    exportWordFromHtml(`<h1>${resume.meta.name ?? ''}</h1><p>${resume.meta.role ?? ''}</p>${html}`);
+    exportWordFromHtml(
+      `<h1>${escapeHtml(resume.meta.name ?? '')}</h1><p>${escapeHtml(resume.meta.role ?? '')}</p>${html}`,
+    );
   }
 
   onMounted(async () => {
@@ -99,10 +107,7 @@ export function useResumeStudio() {
         }
       } else {
         await templateStore.loadCurrent();
-        const themeFromMeta = resume.meta.theme;
-        if (themeFromMeta && isThemeId(themeFromMeta)) {
-          themeStore.setTheme(themeFromMeta as ThemeId);
-        }
+        syncThemeFromMeta(resume.meta.theme);
       }
 
       applyPanelAccent(getThemePanelConfig(themeStore.currentThemeId).accent);
@@ -123,6 +128,22 @@ export function useResumeStudio() {
     (id) => applyPanelAccent(getThemePanelConfig(id).accent),
   );
   watch(() => preview.device, flushSave);
+  watch(
+    () => resume.meta.theme,
+    (theme) => {
+      if (!hydrated) return;
+      syncThemeFromMeta(theme);
+    },
+  );
+  watch(
+    () => templateStore.currentFile,
+    () => {
+      if (!hydrated) return;
+      syncThemeFromMeta(resume.meta.theme);
+      applyPanelAccent(getThemePanelConfig(themeStore.currentThemeId).accent);
+      flushSave();
+    },
+  );
 
   return {
     ready,

@@ -14,6 +14,16 @@ export default defineConfig({
       scss: {},
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('md-editor-v3') || id.includes('@codemirror')) return 'editor';
+          if (id.includes('marked') || id.includes('dompurify')) return 'markdown';
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     host: true,

@@ -24,23 +24,4 @@ export interface ResumeDocument {
   rawMarkdown: string;
 }
 
-export type EditorMode = 'visual' | 'source';
-
 export type PreviewDevice = 'desktop' | 'mobile';
-
-export type ExportFormat = 'markdown' | 'pdf' | 'word';
-
-export const KNOWN_META_KEYS = [
-  'name',
-  'role',
-  'email',
-  'phone',
-  'city',
-  'github',
-  'website',
-  'portfolio',
-  'linkedin',
-  'theme',
-] as const;
-
-export type KnownMetaKey = (typeof KNOWN_META_KEYS)[number];
