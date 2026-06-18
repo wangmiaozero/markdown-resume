@@ -82,3 +82,11 @@ pnpm build
 ## CI
 
 推送至 `main` / `v1.0.0` / `v2.0.0` 分支时自动运行 typecheck、lint、test、build。
+
+## 贡献
+
+欢迎通过 [Issue](https://github.com/wangmiaozero/markdown-resume/issues) 反馈问题，或通过 Pull Request 提交改进（新模版、主题、bug 修复等）。提交 PR 前请确保 `pnpm typecheck`、`pnpm lint`、`pnpm test` 通过。
+
+## License
+
+[MIT](LICENSE)
