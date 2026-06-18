@@ -5,6 +5,9 @@ import { usePreviewStore } from '@/stores/preview';
 import { useThemeStore } from '@/stores/theme';
 import { markdownToHtml } from '@/features/markdown';
 import { renderThemeDocument } from '@/features/themes/renderTheme';
+import { debounce } from '@/utils/debounce';
+
+const PREVIEW_DEBOUNCE_MS = 300;
 
 const props = defineProps<{
   device: 'desktop' | 'mobile';
@@ -19,9 +22,15 @@ const htmlContent = computed(() =>
   resume.sections.map((s) => `## ${s.title}\n\n${s.body}`).join('\n\n'),
 );
 
+function isActiveDevice(): boolean {
+  return preview.device === props.device;
+}
+
 function renderDocument() {
   const theme = themeStore.currentTheme;
   if (!theme || !iframeRef.value) return;
+  // desktop iframe 始终更新（PDF 导出依赖）；mobile 仅在当前设备时更新
+  if (props.device === 'mobile' && !isActiveDevice()) return;
 
   preview.setUpdating(true);
   const doc = renderThemeDocument(theme, {
@@ -34,12 +43,14 @@ function renderDocument() {
   preview.setUpdating(false);
 }
 
+const debouncedRender = debounce(renderDocument, PREVIEW_DEBOUNCE_MS);
+
 onMounted(renderDocument);
 
+watch(() => resume.markdown, debouncedRender);
 watch(
-  () => [resume.meta, resume.sections, themeStore.currentThemeId, props.device],
+  () => [themeStore.currentThemeId, props.device, preview.device] as const,
   () => renderDocument(),
-  { deep: true },
 );
 
 watch(iframeRef, (el) => {

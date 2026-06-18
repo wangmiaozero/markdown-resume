@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
+import TemplateSection from './TemplateSection.vue';
 
 const markdownContent = defineModel<string>('markdownContent', { required: true });
 
@@ -12,22 +13,32 @@ const emit = defineEmits<{
 
 <template>
   <aside id="editorPanel" class="editor-panel">
-    <MdEditor
-      v-model="markdownContent"
-      theme="light"
-      language="zh-CN"
-      :preview="false"
-      :toolbars-exclude="['preview', 'previewOnly', 'htmlPreview', 'github']"
-      class="markdown-editor"
-      @on-change="emit('contentChange')"
-      @on-blur="emit('contentBlur')"
-    />
+    <div class="panel-body editor-panel-body">
+      <TemplateSection />
+      <MdEditor
+        v-model="markdownContent"
+        theme="light"
+        language="zh-CN"
+        :preview="false"
+        :toolbars-exclude="['preview', 'previewOnly', 'htmlPreview', 'github']"
+        class="markdown-editor"
+        @on-change="emit('contentChange')"
+        @on-blur="emit('contentBlur')"
+      />
+    </div>
   </aside>
 </template>
 
 <style scoped>
+.editor-panel-body {
+  flex: 1;
+  min-height: 0;
+}
+
 .markdown-editor {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: auto;
 }
 
 .markdown-editor :deep(.md-editor) {

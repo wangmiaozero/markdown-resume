@@ -18,6 +18,10 @@ dist-ssr
 
 # pnpm local store
 .pnpm-store/
+
+# legacy prototype (not part of build)
+html-tmp/
+
 .DS_Store
 *.suo
 *.ntvs*

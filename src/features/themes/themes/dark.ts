@@ -1,7 +1,7 @@
 import type { ResumeTheme, ThemeRenderContext, ThemeRenderResult } from '../types'
 import { buildContactLine } from '../shared/buildContactLine'
 import { CONTENT_BASE } from '../shared/contentBase'
-import { escapeHtml } from '../shared/escapeHtml'
+import { escapeHtml } from '@/utils/escapeHtml'
 
 function render(ctx: ThemeRenderContext): ThemeRenderResult {
   const name = escapeHtml(ctx.meta.name || '')
