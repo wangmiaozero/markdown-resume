@@ -1,3 +1,5 @@
+import { resolvePublicUrl } from '@/utils/resolvePublicUrl';
+
 export const DEFAULT_TEMPLATE = '高级前端工程师-张三.md';
 
 export const FALLBACK_TEMPLATES = [
@@ -166,7 +168,7 @@ export function templateLabel(filename: string): string {
 
 export async function discoverResumeTemplates(): Promise<string[]> {
   try {
-    const res = await fetch('/templates/manifest.json', { cache: 'no-store' });
+    const res = await fetch(resolvePublicUrl('templates/manifest.json'), { cache: 'no-store' });
     if (res.ok) {
       const files = (await res.json()) as string[];
       if (files.length) return sortTemplateFiles(files);
@@ -178,7 +180,9 @@ export async function discoverResumeTemplates(): Promise<string[]> {
 }
 
 export async function loadTemplateFile(filename: string): Promise<string> {
-  const res = await fetch(`/templates/${encodeURIComponent(filename)}`, { cache: 'no-store' });
+  const res = await fetch(resolvePublicUrl(`templates/${encodeURIComponent(filename)}`), {
+    cache: 'no-store',
+  });
   if (!res.ok) throw new Error(`无法加载 ${filename}`);
   return res.text();
 }

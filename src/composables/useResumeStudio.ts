@@ -115,7 +115,7 @@ export function useResumeStudio() {
       ready.value = true;
     } catch (error) {
       console.error(error);
-      alert('无法加载简历模版。\n\n请运行 pnpm dev 后访问 http://localhost:5173');
+      alert('无法加载简历模版，请刷新页面重试。');
     }
   });
 
