@@ -63,11 +63,13 @@ frontmatter 可选 `theme` 字段，切换模版后自动同步主题。
 
 ### GitHub Pages（推荐）
 
-推送到 `main` 分支后，Actions 会自动构建并发布到 GitHub Pages。
+推送到 `main` 分支后，Actions 会自动构建 `dist/` 并推送到 `gh-pages` 分支。
 
-首次需在仓库 **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
+首次需在仓库 **Settings → Pages → Build and deployment → Source** 选择 **Deploy from a branch**，Branch 选 **`gh-pages`** / **`/ (root)`**。
 
 访问地址：`https://wangmiaozero.github.io/markdown-resume/`
+
+> 勿选 `main` 分支作为 Pages 源，否则会直接部署源码导致白屏（请求 `/src/main.ts` 404）。
 
 ### 本地构建
 
